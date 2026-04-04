@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#184e77">
+  <meta name="description" content="Mobile-friendly doubles court pairing for pickleball and tennis.">
+  <title>OpenPlay Scheduler</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="hero">
+      <img class="hero-logo" src="./pb_rot.gif" alt="OpenPlay rotating pickleball graphic">
+      <div>
+        <p class="eyebrow">OpenPlay Scheduler</p>
+        <h1>OpenPlay</h1>
+        <p class="hero-credit">Developed by Doug Tucker for the pickleball community.</p>
+        <p class="hero-copy">
+          Run singles and doubles queues across locations, assign courts quickly, and track results with fair queue-based pairings.
+        </p>
+      </div>
+      <div class="hero-actions">
+        <button id="installButton" type="button" class="secondary" hidden>Install App</button>
+        <div class="support-callout">
+          <a id="venmoLink" class="chip-link venmo-chip" href="#" target="_blank" rel="noreferrer">
+            <span class="venmo-icon" aria-hidden="true">V</span>
+            <span>Support the developer</span>
+          </a>
+          <span class="support-copy">If you found this app useful consider donating to support its maintenance, future development, and costs of hosting the site.</span>
+        </div>
+      </div>
+    </header>
+
+    <section id="authCard" class="card auth-card">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">Account Access</p>
+          <h2>Sign In</h2>
+        </div>
+      </div>
+      <div id="authStatus" class="empty-inline">Sign in or register before viewing queue details.</div>
+      <form id="loginForm" class="grid-form auth-form">
+        <label class="field grow">
+          <span>Email</span>
+          <input id="loginEmail" type="email" autocomplete="username" placeholder="you@example.com" required>
+        </label>
+        <label class="field compact-field compact-pin-field">
+          <span>PIN</span>
+          <input id="loginPin" type="password" inputmode="numeric" autocomplete="current-password" maxlength="12" placeholder="1234" required>
+        </label>
+        <button type="submit">Sign In</button>
+      </form>
+      <form id="registerForm" class="grid-form auth-form">
+        <label class="field grow">
+          <span>Register as new user</span>
+          <input id="registerEmail" type="email" autocomplete="email" placeholder="you@example.com" required>
+        </label>
+        <button type="submit" class="secondary">Email Me A Starting PIN</button>
+      </form>
+    </section>
+
+    <main id="mainLayout" class="layout" hidden>
+      <section class="card">
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker">1. Choose Location</p>
+            <h2>Locations</h2>
+          </div>
+          <button id="refreshLocationsButton" type="button" class="ghost">Refresh</button>
+        </div>
+
+        <div class="location-row">
+          <label class="field grow">
+            <span>Active location</span>
+            <select id="locationSelect"></select>
+          </label>
+          <button id="addLocationToggle" type="button" class="secondary">Add Location</button>
+        </div>
+
+        <form id="addLocationForm" class="stacked-form" hidden>
+          <label class="field">
+            <span>Location name</span>
+            <input id="newLocationName" type="text" maxlength="60" placeholder="Riverside Pickleball Club" required>
+          </label>
+          <label class="field">
+            <span>Notes</span>
+            <input id="newLocationNotes" type="text" maxlength="100" placeholder="Optional details">
+          </label>
+          <button type="submit">Save Location</button>
+        </form>
+
+        <p id="syncStatus" class="status-line"></p>
+      </section>
+
+      <details class="card collapsible" open>
+        <summary class="card-summary">
+          <div>
+            <p class="section-kicker">My Settings</p>
+            <p class="box-location" data-location-label>Current location: --</p>
+          </div>
+          <span class="summary-hint" data-collapsible-label>Tap to collapse</span>
+        </summary>
+        <div class="card-body">
+          <form id="joinForm" class="grid-form">
+            <label class="field">
+              <span>Email</span>
+              <input id="playerEmail" type="email" readonly>
+            </label>
+            <label class="field">
+              <span>Handle</span>
+              <input id="playerName" type="text" maxlength="30" required placeholder="Alex">
+            </label>
+            <label class="field compact-field compact-rating-field">
+              <span>Rating</span>
+              <input id="playerRating" type="number" min="1" max="6" step="0.25" value="3.5" required>
+            </label>
+            <label class="field compact-field compact-gender-field">
+              <span>Gender (optional)</span>
+              <select id="playerGender">
+                <option value="">Not specified</option>
+                <option value="M">M</option>
+                <option value="F">F</option>
+              </select>
+            </label>
+            <label class="checkbox">
+              <input id="playerNotifications" type="checkbox">
+              <span>Notify me when I am assigned to a court if this app is saved to my phone's home screen</span>
+            </label>
+            <div class="field queue-picker">
+              <span id="joinQueueLabel">Queues</span>
+              <div id="joinQueueOptions" class="checkbox-list"></div>
+            </div>
+            <label class="field compact-field compact-pin-field">
+              <span>New PIN</span>
+              <input id="playerNewPin" type="password" inputmode="numeric" maxlength="12" placeholder="Leave blank to keep current PIN">
+            </label>
+            <button type="submit">Save My Settings</button>
+          </form>
+
+          <div id="playerSummary" class="player-summary"></div>
+        </div>
+      </details>
+
+      <details class="card collapsible" open>
+        <summary class="card-summary">
+          <div>
+            <p class="section-kicker">3. Configure Play</p>
+            <p class="box-location" data-location-label>Current location: --</p>
+            <p class="manager-note">Manager only: queue setup, court use, and assignment rules can only be changed by the current manager.</p>
+          </div>
+          <span class="summary-hint" data-collapsible-label>Tap to collapse</span>
+        </summary>
+        <div class="card-body">
+          <div id="managerStatusBar" class="manager-status">
+            <div id="managerStatusText" class="manager-status-text">No manager assigned.</div>
+            <button id="relinquishManagerButton" type="button" class="ghost" hidden>Give Up Manager</button>
+          </div>
+          <div class="section-heading inline-heading">
+            <label class="checkbox">
+              <input id="allowMultiQueue" type="checkbox">
+              <span>Players may join multiple queues</span>
+            </label>
+          </div>
+
+          <form id="queueForm" class="settings-grid">
+            <label class="field">
+              <span>Queue name</span>
+              <input id="queueName" type="text" maxlength="40" placeholder="Doubles Main" required>
+            </label>
+            <label class="field compact-field compact-format-field">
+              <span>Format</span>
+              <select id="queueFormat">
+                <option value="doubles">Doubles</option>
+                <option value="singles">Singles</option>
+                <option value="mixed-doubles">Mixed-doubles</option>
+              </select>
+            </label>
+            <label class="field compact-field compact-rating-field">
+              <span>Minimum rating</span>
+              <input id="queueMinRating" type="number" min="1" max="6" step="0.25" value="1">
+            </label>
+            <label class="field compact-field compact-count-field">
+              <span># of courts</span>
+              <input id="queueCourtCount" type="number" min="1" max="20" value="1">
+            </label>
+            <label class="field">
+              <span>Court names</span>
+              <div id="queueCourtsList" class="court-name-list"></div>
+            </label>
+            <div class="winner-rules-row">
+              <label class="checkbox winner-stay-toggle">
+                <input id="queueWinnersStay" type="checkbox" checked>
+                <span>Winners play again</span>
+              </label>
+              <label class="field compact-field compact-streak-field winner-rule-field" id="queueMaxGamesWrap">
+                <span>Max games</span>
+                <input id="queueMaxGamesInRow" type="number" min="1" max="10" value="2">
+              </label>
+              <label class="field compact-field compact-pairing-field winner-rule-field" id="queueWinnerPairingWrap">
+                <span>Action</span>
+                <select id="queueWinnerPairing">
+                  <option value="split">Split</option>
+                  <option value="stay">Stay together</option>
+                </select>
+              </label>
+            </div>
+            <label class="field" title="Higher values make the generator prioritize teams with closer player ratings.">
+              <div class="slider-label">
+                <span>Weight: rating balance</span>
+                <strong id="queueWeightRatingValue">40</strong>
+              </div>
+              <input id="queueWeightRating" type="range" min="0" max="100" value="40" title="Higher values make the generator prioritize teams with closer player ratings.">
+            </label>
+            <label class="field" title="Higher values make the generator prioritize teams with similar win percentages.">
+              <div class="slider-label">
+                <span>Weight: win percentage balance</span>
+                <strong id="queueWeightWinRateValue">30</strong>
+              </div>
+              <input id="queueWeightWinRate" type="range" min="0" max="100" value="30" title="Higher values make the generator prioritize teams with similar win percentages.">
+            </label>
+            <label class="field" title="Higher values make the generator prioritize players who have waited through more pairing rounds.">
+              <div class="slider-label">
+                <span>Weight: queue priority</span>
+                <strong id="queueWeightWaitValue">30</strong>
+              </div>
+              <input id="queueWeightWait" type="range" min="0" max="100" value="30" title="Higher values make the generator prioritize players who have waited through more pairing rounds.">
+            </label>
+            <button id="saveQueueButton" type="submit">Save Queue</button>
+          </form>
+
+          <div id="queueConfigList" class="queue-config-list empty-state">
+            No queues configured yet.
+          </div>
+        </div>
+      </details>
+
+      <section class="card">
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker">4. Active Courts</p>
+            <h2>Current Games</h2>
+            <p class="box-location" data-location-label>Current location: --</p>
+          </div>
+        </div>
+        <div id="courtsBoard" class="courts-board empty-state">
+          Generate pairings to populate the courts.
+        </div>
+      </section>
+
+      <details class="card collapsible" open>
+        <summary class="card-summary">
+          <div>
+            <p class="section-kicker">Queue and Stats</p>
+            <h2>Waiting Players</h2>
+            <p class="box-location" data-location-label>Current location: --</p>
+          </div>
+          <span class="summary-hint" data-collapsible-label>Tap to collapse</span>
+        </summary>
+        <div class="card-body">
+          <div class="section-heading inline-heading">
+            <div class="history-toolbar-actions">
+              <button id="generateButton" type="button">Assign Courts</button>
+              <button id="deleteAllPlayersButton" type="button" class="ghost" hidden>Delete All Players</button>
+            </div>
+          </div>
+          <div id="queueBoard" class="queue-board empty-state">
+            No players have joined yet.
+          </div>
+        </div>
+      </details>
+
+      <details class="card collapsible">
+        <summary class="card-summary">
+          <div>
+            <p class="section-kicker">Share</p>
+            <p class="box-location" data-location-label>Current location: --</p>
+          </div>
+          <span class="summary-hint" data-collapsible-label>Tap to expand</span>
+        </summary>
+        <div class="card-body">
+          <div class="share-grid">
+            <label class="field grow">
+              <span>App link</span>
+              <input id="shareLink" type="text" readonly>
+            </label>
+            <button id="copyLinkButton" type="button" class="secondary">Copy Link</button>
+            <img id="qrCode" alt="QR code for sharing the app">
+          </div>
+          <p class="share-help">
+            To get turn notifications on a mobile device, bookmark this app to your phone's home screen and open it from there.
+          </p>
+        </div>
+      </details>
+
+      <details class="card collapsible" open>
+        <summary class="card-summary">
+          <div>
+            <p class="section-kicker">Recent Results</p>
+            <p class="box-location" data-location-label>Current location: --</p>
+          </div>
+          <span class="summary-hint" data-collapsible-label>Tap to collapse</span>
+        </summary>
+        <div class="card-body">
+          <div class="history-toolbar">
+            <label class="field">
+              <span>Filter by player</span>
+              <select id="historyInlinePlayerFilter"></select>
+            </label>
+            <div class="history-toolbar-actions">
+              <button id="clearHistoryButton" type="button" class="ghost" hidden>Clear History</button>
+              <button id="historyOpenInlineButton" type="button" class="secondary">Open Full History</button>
+            </div>
+          </div>
+          <div id="historyPreview" class="history-list compact-history empty-state">No completed games yet.</div>
+        </div>
+      </details>
+
+      <details class="card collapsible" open>
+        <summary class="card-summary">
+          <div>
+            <p class="section-kicker">Standings</p>
+            <p class="box-location" data-location-label>Current location: --</p>
+          </div>
+          <span class="summary-hint" data-collapsible-label>Tap to collapse</span>
+        </summary>
+        <div class="card-body">
+          <div id="rankingsBoard" class="rankings-board empty-state">No rankings available yet.</div>
+        </div>
+      </details>
+    </main>
+  </div>
+
+  <dialog id="historyDialog">
+    <form method="dialog" class="dialog-card">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">Completed Games</p>
+          <h2>History</h2>
+        </div>
+        <button type="submit" class="ghost">Close</button>
+      </div>
+      <label class="field">
+        <span>Filter by player</span>
+        <select id="historyPlayerFilter"></select>
+      </label>
+      <div id="historyList" class="history-list empty-state">No completed games yet.</div>
+    </form>
+  </dialog>
+
+  <dialog id="playerQueuesDialog">
+    <form method="dialog" class="dialog-card">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">Player Queues</p>
+          <h2 id="playerQueuesTitle">Update Queues</h2>
+        </div>
+        <button type="submit" class="ghost">Close</button>
+      </div>
+      <div id="playerQueuesOptions" class="checkbox-list"></div>
+      <div class="dialog-actions">
+        <button id="savePlayerQueuesButton" type="button">Save Queues</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="playerProfileDialog">
+    <form method="dialog" class="dialog-card">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">Player Profile</p>
+          <h2 id="playerProfileTitle">Edit Profile</h2>
+        </div>
+        <button type="submit" class="ghost">Close</button>
+      </div>
+      <div class="grid-form">
+        <label class="field compact-field compact-rating-field">
+          <span>Rating</span>
+          <input id="profileRating" type="number" min="1" max="6" step="0.25" value="3.5" required>
+        </label>
+        <label class="field compact-field compact-gender-field">
+          <span>Gender (optional)</span>
+          <select id="profileGender">
+            <option value="">Not specified</option>
+            <option value="M">M</option>
+            <option value="F">F</option>
+          </select>
+        </label>
+      </div>
+      <div id="playerProfileNotice" class="empty-inline"></div>
+      <div class="dialog-actions">
+        <button id="savePlayerProfileButton" type="button">Save Profile</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script>
+    (function () {
+      var isWebProtocol = window.location.protocol === "http:" || window.location.protocol === "https:";
+      if (isWebProtocol) {
+        var manifestLink = document.createElement("link");
+        manifestLink.rel = "manifest";
+        manifestLink.href = "./manifest.json";
+        document.head.appendChild(manifestLink);
+      }
+    }());
+  </script>
+  <script src="./config.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
