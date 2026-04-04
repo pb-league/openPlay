@@ -1,0 +1,2906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PropBet — Crowd Betting Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ─────────────────────────────────────────
+   DEVELOPER SETTINGS — edit these once
+   ───────────────────────────────────────── */
+/*
+  See SETTINGS object in the <script> block below.
+  That is the only place you need to configure the app.
+*/
+
+:root {
+  --bg: #0a0a0f;
+  --surface: #12121a;
+  --surface2: #1a1a26;
+  --border: #2a2a3d;
+  --accent: #f0c040;
+  --accent2: #e05a2b;
+  --green: #2ecc71;
+  --red: #e74c3c;
+  --blue: #3498db;
+  --text: #e8e8f0;
+  --muted: #7070a0;
+  --radius: 8px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; font-size:15px; line-height:1.5; }
+
+/* UTILITY */
+.hidden{display:none!important} .mono{font-family:'DM Mono',monospace} .accent{color:var(--accent)} .muted{color:var(--muted)} .green{color:var(--green)} .red{color:var(--red)}
+.flex{display:flex} .col{flex-direction:column} .wrap,.flex-wrap{flex-wrap:wrap} .center{align-items:center} .between{justify-content:space-between}
+.gap-8{gap:8px} .gap-12{gap:12px} .gap-16{gap:16px}
+.mt-8{margin-top:8px} .mt-16{margin-top:16px} .mt-24{margin-top:24px} .mb-8{margin-bottom:8px} .mb-16{margin-bottom:16px} .w100{width:100%}
+
+/* TOP BAR */
+#topbar{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(10,10,15,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between}
+#topbar .logo{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;color:var(--accent)}
+#topbar .logo span{color:var(--accent2)}
+#topbar .user-info{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:12px}
+#topbar .user-info strong{color:var(--text)}
+
+main{padding-top:72px;max-width:1100px;margin:0 auto;padding-left:20px;padding-right:20px;padding-bottom:60px}
+
+/* LANDING */
+#view-landing{text-align:center;padding:80px 20px}
+#view-landing h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(56px,10vw,100px);letter-spacing:4px;line-height:.95;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+#view-landing p{color:var(--muted);max-width:520px;margin:16px auto 40px;font-size:17px}
+.landing-cards{display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:640px;margin:0 auto}
+@media(max-width:500px){.landing-cards{grid-template-columns:1fr}}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
+.card-clickable{cursor:pointer;transition:border-color .2s,transform .15s,box-shadow .2s}
+.card-clickable:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 8px 32px rgba(240,192,64,.1)}
+.card h3{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;margin-bottom:6px}
+.card p{font-size:13px;color:var(--muted)}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;border:none;transition:all .2s;text-decoration:none}
+.btn-primary{background:var(--accent);color:#0a0a0f}.btn-primary:hover{background:#f8d060;transform:translateY(-1px)}
+.btn-secondary{background:transparent;color:var(--text);border:1px solid var(--border)}.btn-secondary:hover{border-color:var(--accent);color:var(--accent)}
+.btn-danger{background:var(--red);color:#fff}.btn-danger:hover{background:#c0392b}
+.btn-success{background:var(--green);color:#0a0a0f}.btn-success:hover{background:#27ae60}
+.btn-sm{padding:6px 14px;font-size:13px} .btn-xs{padding:4px 10px;font-size:12px}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none!important}
+
+/* FORMS */
+.form-group{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+.form-group label{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)}
+input,textarea,select{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);padding:10px 14px;font-family:'DM Sans',sans-serif;font-size:14px;width:100%;transition:border-color .2s}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent)}
+textarea{resize:vertical;min-height:80px}
+select option{background:var(--surface2)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:600px){.form-row{grid-template-columns:1fr}}
+
+/* TABS */
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:24px}
+.tab-btn{padding:10px 20px;cursor:pointer;border:none;background:none;color:var(--muted);font-family:'DM Sans',sans-serif;font-weight:600;font-size:14px;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .2s}
+.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tab-btn:hover:not(.active){color:var(--text)}
+
+/* SECTION HEADER */
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.section-header h2{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:2px}
+
+/* BET ROW */
+.bet-row{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:10px}
+.bet-question{font-weight:600;font-size:15px;margin-bottom:10px}
+.bet-choices{display:flex;gap:8px;flex-wrap:wrap}
+.bet-choice-btn{flex:1;min-width:120px;padding:10px 16px;border:2px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;text-align:center;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:4px}
+.bet-choice-btn:hover{border-color:var(--accent);color:var(--accent)}
+.bet-choice-btn.selected{border-color:var(--accent);background:rgba(240,192,64,.12);color:var(--accent)}
+.bet-choice-btn.correct{border-color:var(--green);background:rgba(46,204,113,.12);color:var(--green)}
+.bet-choice-btn.wrong{border-color:var(--red);background:rgba(231,76,60,.08);color:var(--red);opacity:.6}
+.bet-choice-btn .payout-hint{font-size:11px;font-family:'DM Mono';color:var(--muted)}
+.bet-meta{display:flex;gap:16px;margin-top:10px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.bet-status-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600}
+.badge-open{background:rgba(46,204,113,.15);color:var(--green)}
+.badge-closed{background:rgba(231,76,60,.15);color:var(--red)}
+.badge-resolved{background:rgba(52,152,219,.15);color:var(--blue)}
+.host-resolve-btns{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center}
+
+/* EVENT CARD */
+.event-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.event-card .event-info h3{font-size:18px;font-weight:700;margin-bottom:4px}
+.event-card .event-info p{font-size:13px;color:var(--muted)}
+.event-code{font-family:'DM Mono';font-size:20px;color:var(--accent);letter-spacing:4px}
+
+/* SCOREBOARD */
+.scoreboard-table{width:100%;border-collapse:collapse}
+.scoreboard-table th{text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);padding:8px 12px;border-bottom:1px solid var(--border)}
+.scoreboard-table td{padding:12px;border-bottom:1px solid var(--border);font-size:14px}
+.scoreboard-table tr:last-child td{border-bottom:none}
+.scoreboard-table tr:hover td{background:var(--surface2)}
+.rank-num{font-family:'Bebas Neue';font-size:20px;color:var(--muted)}
+.rank-1{color:var(--accent)} .rank-2{color:#aaa} .rank-3{color:#cd7f32}
+
+/* CHAT */
+#chat-panel{position:fixed;bottom:0;right:20px;width:320px;background:var(--surface);border:1px solid var(--border);border-bottom:none;border-radius:var(--radius) var(--radius) 0 0;z-index:200;display:flex;flex-direction:column;transition:height .3s}
+#chat-panel.collapsed{height:44px} #chat-panel.expanded{height:460px}
+#chat-header{padding:10px 14px;background:var(--surface2);border-radius:var(--radius) var(--radius) 0 0;cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-weight:600;font-size:14px;user-select:none}
+#chat-header .chat-badge{background:var(--accent2);color:#fff;border-radius:99px;padding:1px 7px;font-size:11px}
+#chat-messages{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
+.chat-msg{font-size:13px} .chat-msg .chat-sender{font-weight:700;color:var(--accent);margin-right:6px} .chat-msg .chat-sender.host{color:var(--accent2)} .chat-msg.system{color:var(--muted);font-style:italic;text-align:center;font-size:12px}
+#chat-input-row{display:flex;gap:8px;padding:10px;border-top:1px solid var(--border)}
+#chat-input{font-size:13px;padding:7px 10px}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:28px;width:100%;max-width:540px;max-height:90vh;overflow-y:auto}
+.modal h2{font-family:'Bebas Neue';font-size:28px;letter-spacing:2px;margin-bottom:20px}
+
+/* TOAST */
+#toast-container{position:fixed;top:68px;right:16px;z-index:999;display:flex;flex-direction:column;gap:8px}
+.toast{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:12px 18px;font-size:14px;max-width:320px;animation:slideIn .25s ease;display:flex;align-items:center;gap:10px}
+.toast.success{border-left:3px solid var(--green)} .toast.error{border-left:3px solid var(--red)} .toast.info{border-left:3px solid var(--blue)}
+@keyframes slideIn{from{transform:translateX(40px);opacity:0}to{transform:translateX(0);opacity:1}}
+
+/* MISC */
+.divider{height:1px;background:var(--border);margin:24px 0}
+.pill{display:inline-flex;align-items:center;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:600;font-family:'DM Mono'}
+.pill-green{background:rgba(46,204,113,.15);color:var(--green)} .pill-red{background:rgba(231,76,60,.15);color:var(--red)} .pill-yellow{background:rgba(240,192,64,.15);color:var(--accent)}
+.config-block{background:var(--surface2);border-radius:var(--radius);padding:14px;margin-bottom:12px;font-size:13px}
+.config-block label{display:flex;align-items:center;gap:10px;cursor:pointer}
+.config-block input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent)}
+.loading-center{display:flex;justify-content:center;padding:40px}
+.spinner{width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* RESULTS GRID */
+#results-panel{margin-bottom:20px}
+.results-grid-wrap{overflow-x:auto;margin-top:12px}
+.results-grid{border-collapse:collapse;min-width:100%;font-size:12px;font-family:'DM Mono',monospace}
+.results-grid th{padding:8px 10px;background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;white-space:nowrap;position:sticky;top:0}
+.results-grid th.player-col{color:var(--accent);font-size:11px;max-width:80px;overflow:hidden;text-overflow:ellipsis}
+.results-grid th.me-col{color:var(--green)}
+.results-grid td{padding:7px 10px;border:1px solid var(--border);text-align:center;white-space:nowrap}
+.results-grid td.bet-label{text-align:left;font-size:12px;color:var(--text);max-width:180px;overflow:hidden;text-overflow:ellipsis;font-family:'DM Sans',sans-serif;font-weight:600;position:sticky;left:0;background:var(--surface);z-index:1}
+.pick-correct{background:rgba(46,204,113,.2);color:var(--green);font-weight:700}
+.pick-wrong{background:rgba(231,76,60,.15);color:var(--red)}
+.pick-none{background:var(--surface2);color:var(--muted)}
+.pick-pending{background:rgba(240,192,64,.1);color:var(--accent)}
+.score-row td{font-weight:700;font-size:13px;border-top:2px solid var(--accent);background:var(--surface2)}
+.score-row td.bet-label{color:var(--accent);font-family:'Bebas Neue';font-size:16px;letter-spacing:1px}
+.score-row td.score-pos{color:var(--green)} .score-row td.score-neg{color:var(--red)}
+.chart-wrap{position:relative;height:200px}
+.closed-banner{background:linear-gradient(135deg,rgba(240,192,64,.1),rgba(224,90,43,.07));border:1px solid rgba(240,192,64,.3);border-radius:var(--radius);padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:14px}
+.closed-banner .banner-icon{font-size:30px;flex-shrink:0}
+.closed-banner h3{font-family:'Bebas Neue';font-size:20px;letter-spacing:1px;color:var(--accent);margin-bottom:2px}
+.closed-banner p{font-size:13px;color:var(--muted);margin:0}
+
+/* ── RESULTS PANEL v2 ── */
+.bet-legend{list-style:none;padding:0;margin:0}
+.bet-legend li{display:grid;grid-template-columns:2em 1fr auto auto auto;gap:0 12px;align-items:baseline;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px}
+.bet-legend li:last-child{border-bottom:none}
+.bet-num{font-family:'DM Mono';font-weight:700;color:var(--accent)}
+.bet-desc{color:var(--text);font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bet-opt{font-family:'DM Mono';font-size:12px;white-space:nowrap;padding:2px 8px;border-radius:4px}
+.bet-opt-1{color:var(--green);background:rgba(46,204,113,.1)}
+.bet-opt-0{color:var(--accent2);background:rgba(224,90,43,.1)}
+.bet-payout-hint{font-family:'DM Mono';font-size:11px;color:var(--muted);white-space:nowrap}
+.pgrid-wrap{overflow-x:auto}
+.pgrid{border-collapse:collapse;width:100%;font-size:13px}
+.pgrid th{padding:8px 10px;background:var(--surface2);border:1px solid var(--border);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);white-space:nowrap;text-align:center}
+.pgrid th.pgrid-name{text-align:left;min-width:110px}
+.pgrid th.pgrid-payout{color:var(--accent)}
+.pgrid td{padding:7px 10px;border:1px solid var(--border);text-align:center;font-family:'DM Mono';font-size:13px;white-space:nowrap}
+.pgrid td.pgrid-name{text-align:left;font-family:'DM Sans';font-weight:600;color:var(--text)}
+.pgrid td.pgrid-rank{width:28px;font-family:'DM Mono';font-size:12px}
+.pgrid td.pgrid-payout{font-weight:700;color:var(--accent);min-width:60px}
+.pgrid tr.me-row td{background:rgba(240,192,64,.06)}
+.pgrid tr.me-row td.pgrid-name{color:var(--accent)}
+.pc-1{color:var(--green)}
+.pc-0{color:var(--accent2)}
+.pc-none{color:var(--border)}
+.pc-win{color:var(--green);font-weight:900;text-shadow:0 0 8px rgba(46,204,113,.5)}
+.pc-loss{color:var(--red);text-decoration:line-through;opacity:.6}
+.pc-pend1{color:var(--green);opacity:.5}
+.pc-pend0{color:var(--accent2);opacity:.5}
+.rank-gold{color:var(--accent);font-weight:900}
+.rank-silver{color:#aaa;font-weight:700}
+.rank-bronze{color:#cd7f32;font-weight:700}
+.refresh-strip{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:8px}
+
+/* STAT BARS */
+.stat-bar-wrap{margin-top:10px}
+.stat-bar-label{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:4px}
+.stat-bar-track{height:8px;background:var(--surface2);border-radius:99px;overflow:hidden;display:flex}
+.stat-bar-a{background:var(--accent);height:100%;transition:width .4s}
+.stat-bar-b{background:var(--accent2);height:100%;transition:width .4s}
+.stat-names{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.stat-name-pill{font-size:11px;padding:2px 8px;border-radius:99px;font-family:'DM Mono'}
+.stat-name-a{background:rgba(240,192,64,.15);color:var(--accent)}
+.stat-name-b{background:rgba(224,90,43,.15);color:var(--accent2)}
+.stat-name-none{background:var(--surface2);color:var(--muted)}
+
+/* PLAN BADGE */
+.plan-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:99px;font-size:12px;font-weight:700;font-family:'DM Mono';background:rgba(240,192,64,.12);color:var(--accent);border:1px solid rgba(240,192,64,.3)}
+.limit-bar{height:4px;border-radius:99px;background:var(--border);margin-top:4px;overflow:hidden}
+.limit-bar-fill{height:100%;border-radius:99px;background:var(--accent);transition:width .4s}
+.limit-bar-fill.warn{background:var(--accent2)} .limit-bar-fill.full{background:var(--red)}
+
+/* HOST SHEET INFO BOX */
+.sheet-info-box{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;font-size:13px;margin-bottom:16px}
+.sheet-info-box a{color:var(--accent);text-decoration:none} .sheet-info-box a:hover{text-decoration:underline}
+
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--muted)}
+
+/* ── MOBILE ENHANCEMENTS ── */
+@media(max-width:600px){
+  /* topbar */
+  #topbar{padding:0 14px;height:52px}
+  #topbar .logo{font-size:22px}
+  #topbar .user-info{gap:8px;font-size:12px}
+  #topbar .user-info .plan-badge{display:none!important}
+
+  /* main */
+  main{padding-top:64px;padding-left:12px;padding-right:12px;padding-bottom:80px}
+
+  /* landing */
+  #view-landing{padding:40px 12px}
+
+  /* cards */
+  .card{padding:16px}
+
+  /* tabs — scrollable row on small screens */
+  .tabs{gap:0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex-wrap:nowrap;padding-bottom:2px}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab-btn{padding:10px 14px;white-space:nowrap;flex-shrink:0;font-size:13px}
+
+  /* section header stack on mobile */
+  .section-header{flex-wrap:wrap;gap:10px}
+  .section-header h2{font-size:24px}
+
+  /* bet choice buttons full-width on mobile */
+  .bet-choice-btn{min-width:calc(50% - 4px);flex:1 1 calc(50% - 4px)}
+
+  /* host dashboard event/bet rows */
+  .event-card{flex-direction:column;align-items:flex-start}
+  .event-code{font-size:16px;letter-spacing:2px}
+  .host-resolve-btns{gap:6px}
+
+  /* modals full-screen on mobile */
+  .modal-overlay{padding:0;align-items:flex-end}
+  .modal{border-radius:16px 16px 0 0;max-height:92vh;padding:22px 18px}
+  .modal h2{font-size:24px}
+
+  /* forms */
+  .form-row{grid-template-columns:1fr}
+
+  /* bet meta wrap nicely */
+  .bet-meta{gap:10px}
+
+  /* player join / host login max-width */
+  #view-player-join > div,
+  #view-host-login > div,
+  #view-player-register > div{margin:32px auto}
+
+  /* scoreboard table horizontal scroll */
+  .scoreboard-table{font-size:13px}
+  .scoreboard-table th,.scoreboard-table td{padding:8px 8px}
+
+  /* results grid */
+  .pgrid-wrap,.results-grid-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+  /* save bar fixed at bottom */
+  #player-save-bar{position:sticky;bottom:0;background:var(--bg);padding:12px 0;border-top:1px solid var(--border);margin-top:8px}
+
+  /* chat panel full-width on mobile */
+  #chat-panel{right:0;left:0;width:100%;border-radius:16px 16px 0 0;border-left:none;border-right:none}
+  #chat-panel.expanded{height:55vh}
+
+  /* toast adjustments */
+  #toast-container{right:8px;left:8px;top:60px}
+  .toast{max-width:100%}
+
+  /* buttons in host bet rows */
+  .btn-xs{padding:5px 10px;font-size:12px;min-height:34px}
+
+  /* scoreboard compact */
+  #scoreboard-content .card table th:nth-child(5),
+  #scoreboard-content .card table td:nth-child(5){display:none}
+
+  /* usage bar wrap */
+  #host-usage-bar .flex{flex-wrap:wrap;gap:10px}
+}
+
+/* Prevent zoom on input focus on iOS */
+@media(max-width:768px){
+  input,textarea,select{font-size:16px!important}
+}
+
+/* Touch-friendly tap targets */
+@media(hover:none){
+  .btn{min-height:44px}
+  .btn-sm{min-height:40px}
+  .btn-xs{min-height:36px}
+  .bet-choice-btn{min-height:56px}
+  .tab-btn{min-height:44px}
+  .card-clickable{-webkit-tap-highlight-color:rgba(240,192,64,.15)}
+}
+
+/* Token wager row */
+.token-wager-row input[type=number]{-moz-appearance:textfield}
+.token-wager-row input[type=number]::-webkit-inner-spin-button,
+.token-wager-row input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+@media(max-width:480px){
+  .token-wager-row{flex-direction:column;align-items:flex-start!important}
+  .token-wager-row > div{width:100%}
+}
+
+/* PIN input dots styling */
+.pin-input-group{display:flex;gap:10px;justify-content:center;margin:8px 0 16px}
+.pin-digit{width:54px;height:62px;text-align:center;font-size:28px;font-family:'DM Mono',monospace;font-weight:700;border:2px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);-webkit-appearance:none;caret-color:var(--accent)}
+.pin-digit:focus{border-color:var(--accent);outline:none}
+@media(max-width:380px){.pin-digit{width:46px;height:54px;font-size:22px}.pin-input-group{gap:7px}}
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <div class="logo">Prop<span>Bet</span></div>
+  <div class="user-info hidden" id="topbar-user">
+    <span>👤 <strong id="topbar-name"></strong></span>
+    <span id="topbar-plan" class="plan-badge hidden"></span>
+    <button class="btn btn-secondary btn-xs" onclick="logout()">Sign Out</button>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<!-- CHAT PANEL -->
+<div id="chat-panel" class="collapsed hidden">
+  <div id="chat-header" onclick="toggleChat()">
+    <span>💬 Event Chat <span id="chat-badge" class="chat-badge hidden">0</span></span>
+    <span id="chat-chevron">▲</span>
+  </div>
+  <div id="chat-event-bar" class="hidden" style="padding:6px 10px;border-bottom:1px solid var(--border);background:var(--surface2)">
+    <select id="chat-event-select" onchange="switchChatEvent()" style="font-size:12px;padding:4px 8px;width:100%"></select>
+  </div>
+  <div id="chat-messages"></div>
+  <div id="chat-input-row">
+    <input type="text" id="chat-input" placeholder="Message..." maxlength="200" onkeydown="if(event.key==='Enter')sendChat()">
+    <button class="btn btn-primary btn-sm" onclick="sendChat()">→</button>
+  </div>
+</div>
+
+<main>
+
+<!-- ══ VIEW: LANDING ══ -->
+<div id="view-landing">
+  <div style="text-align:center;padding:80px 20px">
+    <h1 style="font-family:'Bebas Neue',sans-serif;font-size:clamp(56px,10vw,100px);letter-spacing:4px;line-height:.95;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Prop<br>Bet</h1>
+    <p style="color:var(--muted);max-width:520px;margin:16px auto 40px;font-size:17px">Host prop-bet pools for any event. Parimutuel payouts. Real-time scoreboards.</p>
+    <div id="landing-not-configured" class="hidden" style="max-width:500px;margin:0 auto 32px;background:var(--surface);border:1px solid var(--accent2);border-radius:var(--radius);padding:20px;text-align:left">
+      <h3 style="font-family:'Bebas Neue';font-size:20px;color:var(--accent2);margin-bottom:8px">⚠️ Not Configured</h3>
+      <p style="color:var(--muted);font-size:13px">The <code style="font-family:'DM Mono';background:var(--surface2);padding:2px 6px;border-radius:4px">SETTINGS.scriptUrl</code> in the HTML has not been set. The app developer needs to deploy the master Apps Script and paste its URL into the SETTINGS object at the top of the script block.</p>
+    </div>
+    <div class="landing-cards" style="max-width:640px;margin:0 auto">
+      <div class="card card-clickable" onclick="showView('host-login')">
+        <h3>🎯 Host</h3>
+        <p>Create events, manage prop bets, invite players, resolve outcomes</p>
+      </div>
+      <div class="card card-clickable" onclick="showView('player-join')">
+        <h3>🎲 Player</h3>
+        <p>Join an event with your invite code, place bets, track your winnings</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ VIEW: HOST LOGIN ══ -->
+<div id="view-host-login" class="hidden">
+  <div style="max-width:440px;margin:60px auto">
+    <button class="btn btn-secondary btn-sm mb-16" onclick="showView('landing')">← Back</button>
+    <div class="card">
+      <h2 style="font-family:'Bebas Neue';font-size:28px;letter-spacing:2px;margin-bottom:6px">Host Portal</h2>
+      <p class="muted mb-16" style="font-size:13px">Sign in to manage your events, or create a new host account.</p>
+      <div id="host-login-form">
+        <div class="form-group"><label>Email</label><input type="email" id="host-email" placeholder="you@example.com" onkeydown="if(event.key==='Enter')hostLogin()"></div>
+        <div class="form-group"><label>Password</label><input type="password" id="host-password" placeholder="Your password" onkeydown="if(event.key==='Enter')hostLogin()"></div>
+        <button class="btn btn-primary w100" onclick="hostLogin()">Sign In</button>
+        <div class="divider"></div>
+        <p class="muted mb-8" style="font-size:13px">New here? Create a host account:</p>
+        <button class="btn btn-secondary w100" onclick="showHostRegister()">Create Host Account</button>
+      </div>
+      <div id="host-register-form" class="hidden">
+        <div class="form-group"><label>Your Name</label><input type="text" id="host-reg-name" placeholder="Jane Smith"></div>
+        <div class="form-group"><label>Email</label><input type="email" id="host-reg-email" placeholder="you@example.com"></div>
+        <div class="form-group"><label>Password</label><input type="password" id="host-reg-pw" placeholder="Choose a password"></div>
+        <div class="form-group"><label>Confirm Password</label><input type="password" id="host-reg-pw2" placeholder="Repeat password" onkeydown="if(event.key==='Enter')hostRegister()"></div>
+        <button class="btn btn-primary w100" onclick="hostRegister()">Create Account</button>
+        <button class="btn btn-secondary w100 mt-8" onclick="showHostLogin()">← Back to Sign In</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ VIEW: HOST DASHBOARD ══ -->
+<div id="view-host" class="hidden">
+  <div class="section-header">
+    <h2>Host Dashboard</h2>
+    <button class="btn btn-secondary btn-sm" onclick="showHostModal('new-event')">+ New Event</button>
+  </div>
+  <div id="host-usage-bar" class="mb-16"></div>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="hostTab('events',this)">Events</button>
+    <button class="tab-btn" onclick="hostTab('bets',this)">Bets</button>
+    <button class="tab-btn" onclick="hostTab('stats',this)">Stats</button>
+    <button class="tab-btn" onclick="hostTab('players',this)">Players</button>
+    <button class="tab-btn" onclick="hostTab('invite',this)">Invite</button>
+    <button class="tab-btn" onclick="hostTab('settings',this)">Settings</button>
+  </div>
+
+  <div id="host-tab-events">
+    <div id="host-events-list"><div class="loading-center"><div class="spinner"></div></div></div>
+  </div>
+
+  <div id="host-tab-bets" class="hidden">
+    <div class="form-group mb-16"><label>Select Event</label><select id="host-bet-event-select" onchange="loadHostBets()"></select></div>
+    <div class="section-header" style="margin-bottom:12px">
+      <h2 style="font-size:22px">Prop Bets</h2>
+      <button class="btn btn-primary btn-sm" onclick="showHostModal('new-bet')">+ Add Bet</button>
+    </div>
+    <div id="host-bets-list"></div>
+  </div>
+
+  <div id="host-tab-stats" class="hidden">
+    <div class="flex between center mb-16">
+      <div class="form-group" style="margin:0;flex:1;max-width:300px"><label>Select Event</label><select id="host-stats-event-select" onchange="loadHostStats()"></select></div>
+      <button class="btn btn-secondary btn-sm" onclick="loadHostStats()">↻ Refresh</button>
+    </div>
+    <div id="host-stats-list"></div>
+  </div>
+
+  <div id="host-tab-players" class="hidden">
+    <div class="form-group mb-16"><label>Select Event</label><select id="host-players-event-select" onchange="loadHostPlayers()"></select></div>
+    <div id="host-players-list"></div>
+  </div>
+
+  <div id="host-tab-invite" class="hidden">
+    <div class="card" style="max-width:560px">
+      <h3 style="font-family:'Bebas Neue';font-size:24px;letter-spacing:1px;margin-bottom:6px">Send Invite</h3>
+      <p class="muted mb-16" style="font-size:13px">Emails sent via Gmail through the Apps Script backend.</p>
+      <div class="form-group"><label>Event</label><select id="invite-event-select" onchange="updateInviteLink()"></select></div>
+      <div class="form-group"><label>Recipient Emails — comma separated</label><input type="text" id="invite-emails" placeholder="alice@example.com, bob@example.com"></div>
+      <div class="form-group"><label>Personal Message (optional)</label><textarea id="invite-message" rows="3" placeholder="Join us for the big game!"></textarea></div>
+      <button class="btn btn-primary" onclick="sendInvites()">Send Invites 📧</button>
+      <div class="divider"></div>
+      <p class="muted" style="font-size:13px">📋 Or share this invite link:</p>
+      <div id="invite-link-box" class="config-block mono" style="margin-top:8px;word-break:break-all;font-size:13px">Select an event above</div>
+      <button class="btn btn-secondary btn-sm mt-8" onclick="copyInviteLink()">Copy Link</button>
+    </div>
+  </div>
+
+  <div id="host-tab-settings" class="hidden">
+    <div style="max-width:500px">
+      <div class="card mb-16">
+        <h3 style="font-family:'Bebas Neue';font-size:22px;letter-spacing:1px;margin-bottom:16px">Account</h3>
+        <div class="form-group"><label>Display Name</label><input type="text" id="set-host-name"></div>
+        <div class="form-group"><label>Current Password</label><input type="password" id="set-cur-pw"></div>
+        <div class="form-group"><label>New Password (leave blank to keep current)</label><input type="password" id="set-new-pw"></div>
+        <button class="btn btn-primary btn-sm" onclick="saveHostSettings()">Save Settings</button>
+      </div>
+      <div class="card mb-16">
+        <h3 style="font-family:'Bebas Neue';font-size:22px;letter-spacing:1px;margin-bottom:12px">Your Data Sheet</h3>
+        <div id="host-sheet-info"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ VIEW: PLAYER JOIN ══ -->
+<div id="view-player-join" class="hidden">
+  <div style="max-width:440px;margin:60px auto">
+    <button class="btn btn-secondary btn-sm mb-16" onclick="showView('landing')">← Back</button>
+    <div class="card">
+      <h2 style="font-family:'Bebas Neue';font-size:28px;letter-spacing:2px;margin-bottom:6px">Join Event</h2>
+      <p class="muted mb-16" style="font-size:13px">Enter your invite code to get started</p>
+      <div class="form-group"><label>Event Code</label><input type="text" id="join-code" placeholder="e.g. GAME2024" style="font-family:'DM Mono';font-size:18px;text-transform:uppercase" oninput="this.value=this.value.toUpperCase()"></div>
+      <button class="btn btn-primary w100" onclick="validateInviteCode()">Validate Code</button>
+      <div class="divider"></div>
+      <p class="muted mb-8" style="font-size:13px">Already registered? Log in:</p>
+      <div class="form-group"><label>Handle</label><input type="text" id="login-handle" placeholder="YourName" autocomplete="username"></div>
+      <div class="form-group">
+        <label>4-Digit PIN</label>
+        <div class="pin-input-group" id="login-pin-group">
+          <input class="pin-digit" type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]*" id="lpin0" oninput="pinDigitInput('lpin',0)" onkeydown="pinDigitKey('lpin',0,event)">
+          <input class="pin-digit" type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]*" id="lpin1" oninput="pinDigitInput('lpin',1)" onkeydown="pinDigitKey('lpin',1,event)">
+          <input class="pin-digit" type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]*" id="lpin2" oninput="pinDigitInput('lpin',2)" onkeydown="pinDigitKey('lpin',2,event)">
+          <input class="pin-digit" type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]*" id="lpin3" oninput="pinDigitInput('lpin',3)" onkeydown="pinDigitKey('lpin',3,event)" onkeyup="if(getPinValue('lpin').length===4)playerLogin()">
+        </div>
+        <input type="hidden" id="login-pin">
+      </div>
+      <button class="btn btn-secondary w100" onclick="playerLogin()">Log In</button>
+      <div style="text-align:center;margin-top:10px">
+        <button onclick="openPinRecovery()" style="font-size:13px;color:var(--muted);background:none;border:none;cursor:pointer;text-decoration:underline;padding:4px">Forgot your PIN?</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ VIEW: PLAYER REGISTER ══ -->
+<div id="view-player-register" class="hidden">
+  <div style="max-width:440px;margin:60px auto">
+    <div class="card">
+      <h2 style="font-family:'Bebas Neue';font-size:28px;letter-spacing:2px;margin-bottom:6px">Create Profile</h2>
+      <p class="muted mb-16" style="font-size:13px">Event: <strong id="reg-event-name"></strong> ✓</p>
+      <div class="form-group"><label>Your Handle / Name</label><input type="text" id="reg-handle" placeholder="e.g. BettingQueen" maxlength="24" autocomplete="username" oninput="checkHandleAvailability(this.value)">
+        <div id="handle-check-msg" style="font-size:12px;margin-top:4px;min-height:16px"></div>
+      </div>
+      <div class="form-group"><label>Email <span style="color:var(--muted);font-size:11px">(for PIN recovery only)</span></label><input type="email" id="reg-email" placeholder="you@example.com" autocomplete="email"></div>
+      <div class="form-group">
+        <label>Choose a 4-Digit PIN</label>
+        <div class="pin-input-group">
+          <input class="pin-digit" type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]*" id="rpin0" oninput="pinDigitInput('rpin',0)" onkeydown="pinDigitKey('rpin',0,event)">
+          <input class="pin-digit" type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]*" id="rpin1" oninput="pinDigitInput('rpin',1)" onkeydown="pinDigitKey('rpin',1,event)">
+          <input class="pin-digit" type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]*" id="rpin2" oninput="pinDigitInput('rpin',2)" onkeydown="pinDigitKey('rpin',2,event)">
+          <input class="pin-digit" type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]*" id="rpin3" oninput="pinDigitInput('rpin',3)" onkeydown="pinDigitKey('rpin',3,event)">
+        </div>
+        <input type="hidden" id="reg-pin">
+      </div>
+      <div class="form-group">
+        <label>Confirm PIN</label>
+        <div class="pin-input-group">
+          <input class="pin-digit" type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]*" id="rpin2a0" oninput="pinDigitInput('rpin2a',0)" onkeydown="pinDigitKey('rpin2a',0,event)">
+          <input class="pin-digit" type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]*" id="rpin2a1" oninput="pinDigitInput('rpin2a',1)" onkeydown="pinDigitKey('rpin2a',1,event)">
+          <input class="pin-digit" type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]*" id="rpin2a2" oninput="pinDigitInput('rpin2a',2)" onkeydown="pinDigitKey('rpin2a',2,event)">
+          <input class="pin-digit" type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]*" id="rpin2a3" oninput="pinDigitInput('rpin2a',3)" onkeydown="pinDigitKey('rpin2a',3,event)" onkeyup="if(getPinValue('rpin2a').length===4)registerPlayer()">
+        </div>
+        <input type="hidden" id="reg-pin2">
+      </div>
+      <button class="btn btn-primary w100" onclick="registerPlayer()">Join the Action 🎲</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ VIEW: PLAYER DASHBOARD ══ -->
+<div id="view-player" class="hidden">
+  <div class="tabs">
+    <button class="tab-btn active" onclick="playerTab('bets',this)">My Bets</button>
+    <button class="tab-btn" onclick="playerTab('scoreboard',this)">Scoreboard</button>
+    <button class="tab-btn" onclick="playerTab('events',this)">Events</button>
+  </div>
+
+  <div id="player-tab-bets">
+    <!-- Token balance bar -->
+    <div id="token-bar" class="hidden" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span style="font-size:13px;color:var(--muted)">Tokens</span>
+        <span id="token-remaining" style="font-family:'DM Mono';font-size:22px;font-weight:700;color:var(--accent)">—</span>
+        <span id="token-total-label" style="font-size:12px;color:var(--muted)"></span>
+      </div>
+      <div id="bet-countdown" style="font-family:'DM Mono';font-size:13px;color:var(--muted);text-align:right"></div>
+    </div>
+    <div class="flex between center mb-16">
+      <div class="form-group" style="margin:0;flex:1;max-width:300px"><select id="player-event-select" onchange="loadPlayerBets()"></select></div>
+      <button class="btn btn-secondary btn-sm" onclick="loadPlayerBets()">↻ Refresh</button>
+    </div>
+    <div id="results-panel" class="hidden"></div>
+    <div id="player-bets-list"></div>
+    <div id="player-save-bar" class="hidden mt-16">
+      <button class="btn btn-success" onclick="saveBets()">💾 Save My Bets</button>
+      <span class="muted" style="font-size:13px;margin-left:12px">Unsaved changes</span>
+    </div>
+  </div>
+
+  <div id="player-tab-scoreboard" class="hidden">
+    <div class="flex between center mb-16">
+      <div class="form-group" style="margin:0;flex:1;max-width:300px"><select id="score-event-select" onchange="loadScoreboard()"></select></div>
+      <div class="flex gap-8 center">
+        <span class="muted" style="font-size:12px" id="score-last-update"></span>
+        <button class="btn btn-secondary btn-sm" onclick="loadScoreboard()">↻ Refresh</button>
+      </div>
+    </div>
+    <div id="scoreboard-content"></div>
+  </div>
+
+  <div id="player-tab-events" class="hidden">
+    <div class="flex between center mb-16">
+      <h2 style="font-family:'Bebas Neue';font-size:26px;letter-spacing:2px">My Events</h2>
+      <button class="btn btn-primary btn-sm" onclick="showJoinAnotherEvent()">+ Join Another</button>
+    </div>
+    <div id="join-another-row" class="hidden card mb-16">
+      <p class="muted mb-8" style="font-size:13px">Enter a new invite code:</p>
+      <div class="flex gap-8 center">
+        <input type="text" id="join-another-code" placeholder="EVENT CODE" style="font-family:'DM Mono';font-size:16px;text-transform:uppercase;max-width:200px" oninput="this.value=this.value.toUpperCase()">
+        <button class="btn btn-primary btn-sm" onclick="joinAnotherEvent()">Join</button>
+        <button class="btn btn-secondary btn-sm" onclick="document.getElementById('join-another-row').classList.add('hidden')">Cancel</button>
+      </div>
+    </div>
+    <div id="player-events-list"></div>
+  </div>
+</div>
+
+</main>
+
+<!-- ══ MODALS ══ -->
+<div id="modal-new-event" class="modal-overlay hidden">
+  <div class="modal">
+    <h2>New Event</h2>
+    <div class="form-group"><label>Event Name</label><input type="text" id="ev-name" placeholder="Super Bowl LVIII"></div>
+    <div class="form-group"><label>Description</label><textarea id="ev-desc" placeholder="Prop bets for the big game…"></textarea></div>
+    <div class="form-row">
+      <div class="form-group"><label>Betting Opens</label><input type="datetime-local" id="ev-opens"></div>
+      <div class="form-group"><label>Betting Deadline</label><input type="datetime-local" id="ev-deadline"></div>
+    </div>
+    <div class="form-group">
+      <label>Starting Tokens Per Player</label>
+      <input type="number" id="ev-tokens" placeholder="1000" min="1" max="999999" value="1000">
+    </div>
+    <div class="config-block"><label><input type="checkbox" id="ev-chat-enabled" checked> Enable Chat</label></div>
+    <div class="flex gap-8 mt-16">
+      <button class="btn btn-primary" onclick="submitNewEvent()">Create Event</button>
+      <button class="btn btn-secondary" onclick="closeModal('modal-new-event')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="modal-new-bet" class="modal-overlay hidden">
+  <div class="modal">
+    <h2>Add Prop Bet</h2>
+    <div class="form-group"><label>Question</label><input type="text" id="bet-q" placeholder="Will the coin toss be Heads?"></div>
+    <div class="form-row">
+      <div class="form-group"><label>Option A</label><input type="text" id="bet-a" placeholder="Yes / Heads / Over"></div>
+      <div class="form-group"><label>Option B</label><input type="text" id="bet-b" placeholder="No / Tails / Under"></div>
+    </div>
+    <div class="config-block mb-16">
+      <label><input type="checkbox" id="bet-use-custom-deadline" onchange="document.getElementById('bet-custom-deadline-row').classList.toggle('hidden',!this.checked)"> Use a different deadline for this bet</label>
+      <div id="bet-custom-deadline-row" class="hidden mt-8">
+        <div class="form-group"><label>Bet Deadline</label><input type="datetime-local" id="bet-deadline"></div>
+      </div>
+    </div>
+    <div class="flex gap-8">
+      <button class="btn btn-primary" onclick="createBet()">Add Bet</button>
+      <button class="btn btn-secondary" onclick="closeModal('modal-new-bet')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="modal-edit-event" class="modal-overlay hidden">
+  <div class="modal">
+    <h2>Edit Event</h2>
+    <input type="hidden" id="edit-ev-id">
+    <div class="form-group"><label>Event Name</label><input type="text" id="edit-ev-name"></div>
+    <div class="form-group"><label>Description</label><textarea id="edit-ev-desc"></textarea></div>
+    <div class="form-row">
+      <div class="form-group"><label>Betting Opens</label><input type="datetime-local" id="edit-ev-opens"></div>
+      <div class="form-group"><label>Betting Deadline</label><input type="datetime-local" id="edit-ev-deadline"></div>
+    </div>
+    <div class="config-block"><label><input type="checkbox" id="edit-ev-chat"> Enable Chat</label></div>
+    <div class="form-group mt-8">
+      <label>Starting Tokens Per Player</label>
+      <input type="number" id="edit-ev-tokens" min="1" max="999999" value="1000">
+    </div>
+    <div class="flex gap-8 mt-16">
+      <button class="btn btn-primary" onclick="saveEditEvent()">Save Changes</button>
+      <button class="btn btn-secondary" onclick="closeModal('modal-edit-event')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="modal-edit-bet" class="modal-overlay hidden">
+  <div class="modal">
+    <h2>Edit Bet</h2>
+    <input type="hidden" id="edit-bet-id">
+    <div class="form-group"><label>Question</label><input type="text" id="edit-bet-q"></div>
+    <div class="form-row">
+      <div class="form-group"><label>Option A</label><input type="text" id="edit-bet-a"></div>
+      <div class="form-group"><label>Option B</label><input type="text" id="edit-bet-b"></div>
+    </div>
+    <div class="form-group"><label>Deadline (leave blank to use event deadline)</label><input type="datetime-local" id="edit-bet-deadline"></div>
+    <div class="flex gap-8 mt-16">
+      <button class="btn btn-primary" onclick="saveEditBet()">Save Changes</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteBet()">🗑 Delete Bet</button>
+      <button class="btn btn-secondary" onclick="closeModal('modal-edit-bet')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="modal-sheet-setup" class="modal-overlay hidden">
+  <div class="modal">
+    <h2>Sheet Setup Required</h2>
+    <p class="muted mb-16" style="font-size:14px">Your first event needs a Google Sheet to store data. Choose an option:</p>
+    <div class="card card-clickable mb-12" onclick="createAutoSheet()" style="border-color:var(--accent)">
+      <h3 style="color:var(--accent)">🚀 Auto-Create (recommended)</h3>
+      <p>The app automatically creates and manages a Google Sheet for you. Nothing to do!</p>
+    </div>
+    <div class="card" style="margin-bottom:12px">
+      <h3 style="margin-bottom:8px">📋 Use My Own Sheet</h3>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:12px">Create a blank Google Sheet, then share it with <strong id="dev-email-display" style="color:var(--accent)"></strong> as an Editor. Paste the Sheet ID below:</p>
+      <div class="form-group" style="margin-bottom:8px">
+        <label>Sheet ID</label>
+        <input type="text" id="custom-sheet-id" placeholder="from the URL: docs.google.com/spreadsheets/d/SHEET_ID/edit">
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="useCustomSheet()">Use This Sheet</button>
+    </div>
+    <button class="btn btn-secondary btn-sm" onclick="closeModal('modal-sheet-setup')">Cancel</button>
+  </div>
+</div>
+
+<!-- ══ MODAL: PIN RECOVERY ══ -->
+<div id="modal-pin-recovery" class="modal-overlay hidden">
+  <div class="modal">
+    <h2>🔑 Forgot PIN</h2>
+
+    <!-- Step 1: enter handle + email -->
+    <div id="pin-recovery-step1">
+      <p class="muted mb-16" style="font-size:14px">Enter your handle and the email you registered with. We'll send a one-time reset code to that address.</p>
+      <div class="form-group"><label>Your Handle</label><input type="text" id="recovery-handle" placeholder="YourHandle" autocomplete="username"></div>
+      <div class="form-group"><label>Email</label><input type="email" id="recovery-email" placeholder="you@example.com" autocomplete="email"></div>
+      <div id="recovery-msg1" class="hidden" style="margin-bottom:12px"></div>
+      <div class="flex gap-8 mt-16">
+        <button class="btn btn-primary" id="recovery-send-btn" onclick="sendPinResetEmail()">Send Reset Code</button>
+        <button class="btn btn-secondary" onclick="closeModal('modal-pin-recovery')">Cancel</button>
+      </div>
+    </div>
+
+    <!-- Step 2: enter code + new PIN -->
+    <div id="pin-recovery-step2" class="hidden">
+      <p class="muted mb-16" style="font-size:14px">A 6-digit code was sent to your email. Enter it below along with your new PIN.</p>
+      <div class="form-group">
+        <label>Reset Code <span style="color:var(--muted);font-size:11px">(check your email)</span></label>
+        <input type="text" id="recovery-code-input" placeholder="123456" maxlength="6" inputmode="numeric"
+          style="font-family:'DM Mono';font-size:20px;letter-spacing:4px;text-align:center">
+      </div>
+      <div class="form-group">
+        <label>New PIN</label>
+        <div class="pin-input-group">
+          <input class="pin-digit" type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]*" id="recpin0" oninput="pinDigitInput('recpin',0)" onkeydown="pinDigitKey('recpin',0,event)">
+          <input class="pin-digit" type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]*" id="recpin1" oninput="pinDigitInput('recpin',1)" onkeydown="pinDigitKey('recpin',1,event)">
+          <input class="pin-digit" type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]*" id="recpin2" oninput="pinDigitInput('recpin',2)" onkeydown="pinDigitKey('recpin',2,event)">
+          <input class="pin-digit" type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]*" id="recpin3" oninput="pinDigitInput('recpin',3)" onkeydown="pinDigitKey('recpin',3,event)">
+        </div>
+        <input type="hidden" id="recovery-new-pin">
+      </div>
+      <div id="recovery-msg2" class="hidden" style="margin-bottom:12px"></div>
+      <div class="flex gap-8">
+        <button class="btn btn-primary" onclick="submitPinReset()">Set New PIN</button>
+        <button class="btn btn-secondary" onclick="pinRecoveryBack()">← Back</button>
+      </div>
+      <p style="font-size:12px;color:var(--muted);margin-top:12px">Code expires in 15 minutes. <button onclick="sendPinResetEmail(true)" style="background:none;border:none;color:var(--accent);font-size:12px;cursor:pointer;text-decoration:underline;padding:0">Resend</button></p>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════
+//  DEVELOPER SETTINGS — edit this block once, then forget it
+// ════════════════════════════════════════════════════════════
+const SETTINGS = {
+  // Paste the deployed Apps Script Web App URL here:
+  scriptUrl: 'https://script.google.com/macros/s/AKfycbzN0mdL2peHAobyPxmRekadmldUjDQh1IKql_Urc1w2eXhSIcb_buyvs8JrwMyv-vT28Q/exec',   // e.g. 'https://script.google.com/macros/s/ABC.../exec'
+
+  // The Gmail address that owns the master sheet & creates host sheets:
+  developerEmail: 'pbleaguemanager@gmail.com',  // e.g. 'propbet.app@gmail.com'
+
+  // Plan limits for new hosts (can be overridden per-host in master sheet):
+  defaultPlan: {
+    maxEvents:  5,
+    maxBets:    20,
+    maxPlayers: 50,
+    planName:   'Free'
+  }
+};
+// ════════════════════════════════════════════════════════════
+
+// ── STATE ──
+let appState = {
+  role: null,
+  host: null,
+  player: null,
+  playerSheets: {},
+  currentEventId: null,
+  events: [],
+  pendingBets: {},
+  chatOpen: false,
+  chatUnread: 0,
+  chat: [],
+  scoreRefreshTimer: null,
+  chatRefreshTimer: null,
+  betsRefreshTimer: null,
+  _allBets: [], _allPlayers: [],
+  _startingTokens: 1000,
+  _tokensWagered: 0,
+  _pendingTokens: {},
+  _dirty: false   // true when player has unsaved picks or wager changes
+};
+
+// ── GAS REQUEST ──
+// All DB calls go through the single master Apps Script.
+// For host operations we pass hostSheetId so the script operates on the right sheet.
+async function gas(body) {
+  if (!SETTINGS.scriptUrl) throw new Error('scriptUrl not configured in SETTINGS');
+  const r = await fetch(SETTINGS.scriptUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify(body),
+    redirect: 'follow'
+  });
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  const text = await r.text();
+  try { return JSON.parse(text); }
+  catch(e) { throw new Error('Bad JSON from script: ' + text.slice(0,120)); }
+}
+
+// Convenience: call gas with hostSheetId auto-injected for host operations
+function gasHost(body) {
+  return gas({ ...body, sheetId: appState.host?.sheetId });
+}
+function gasForSheet(sheetId, body) {
+  return gas({ ...body, sheetId });
+}
+
+// ── DB HELPERS ──
+async function dbGetRows(tab, sheetId) {
+  const res = await gasForSheet(sheetId, { action: 'getRows', tab });
+  if (res.error) throw new Error(res.error);
+  const rows = res.rows || [];
+  if (rows.length < 1) return [];
+  const headers = rows[0];
+  return rows.slice(1).map(row => {
+    const obj = {};
+    headers.forEach((h, i) => obj[h] = row[i] !== undefined ? String(row[i]) : '');
+    return obj;
+  });
+}
+async function dbAppend(tab, row, sheetId) {
+  const res = await gasForSheet(sheetId, { action: 'appendRow', tab, row });
+  if (res.error) throw new Error(res.error);
+  return res;
+}
+async function dbUpdate(tab, rowIndex, row, sheetId) {
+  const res = await gasForSheet(sheetId, { action: 'updateRow', tab, rowIndex, row });
+  if (res.error) throw new Error(res.error);
+  return res;
+}
+// Master sheet operations (no sheetId — defaults to master)
+async function masterGet(tab) { return dbGetRows(tab, null); }
+async function masterAppend(tab, row) { return dbAppend(tab, row, null); }
+async function masterUpdate(tab, rowIndex, row) { return dbUpdate(tab, rowIndex, row, null); }
+
+// ── UTILS ──
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+function generateCode() {
+  const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  return Array.from({length:6}, ()=>c[Math.floor(Math.random()*c.length)]).join('');
+}
+function hashStr(s) {
+  let h = 0;
+  for (let c of (s + 'propbet_salt_2024')) { h = ((h<<5)-h)+c.charCodeAt(0); h|=0; }
+  return h.toString(16);
+}
+
+// ── UNSAVED CHANGES GUARD ──
+function isDirty() {
+  return appState._dirty ||
+    Object.keys(appState.pendingBets||{}).length > 0 ||
+    Object.values(appState._pendingTokens||{}).some(v => v > 0);
+}
+function markDirty()  { appState._dirty = true; }
+function markClean()  { appState._dirty = false; }
+
+function confirmNavigateAway(msg) {
+  if (!isDirty()) return true;
+  return confirm(msg || 'You have unsaved bets. Leave without saving?');
+}
+
+// Warn on browser close/refresh
+window.addEventListener('beforeunload', e => {
+  if (isDirty()) { e.preventDefault(); e.returnValue = ''; }
+});
+
+// ── PIN LOGIN RATE LIMITER (client-side) ──
+// Tracks failed attempts in sessionStorage so it survives page refresh but resets on new tab
+const _RL_KEY = 'propbet_pin_attempts';
+function rlGet() { try { return JSON.parse(sessionStorage.getItem(_RL_KEY)||'{"count":0,"until":0}'); } catch(e) { return {count:0,until:0}; } }
+function rlSave(d) { sessionStorage.setItem(_RL_KEY, JSON.stringify(d)); }
+function rlRecord(success) {
+  const d = rlGet();
+  if (success) { rlSave({count:0,until:0}); return; }
+  d.count++;
+  // Lockout: 3 fails→30s, 5→2min, 7→10min, 10+→30min
+  const delays = [0,0,0,30,30,120,120,600,600,600,1800];
+  const secs = delays[Math.min(d.count, delays.length-1)];
+  d.until = secs > 0 ? Date.now() + secs*1000 : d.until;
+  rlSave(d);
+}
+function rlCheck() {
+  const d = rlGet();
+  if (d.until > Date.now()) {
+    const secs = Math.ceil((d.until - Date.now()) / 1000);
+    const m = Math.floor(secs/60), s = secs%60;
+    toast(`Too many failed attempts. Try again in ${m>0?m+'m ':''}${s}s.`, 'error');
+    return false;
+  }
+  return true;
+}
+
+// ── PIN RECOVERY (email-based) ──
+let _recoveryPlayerRecord = null;
+
+function openPinRecovery() {
+  document.getElementById('pin-recovery-step1').classList.remove('hidden');
+  document.getElementById('pin-recovery-step2').classList.add('hidden');
+  document.getElementById('recovery-handle').value='';
+  document.getElementById('recovery-email').value='';
+  const m1 = document.getElementById('recovery-msg1');
+  if (m1) { m1.classList.add('hidden'); m1.innerHTML=''; }
+  clearPinBoxes('recpin');
+  const codeIn = document.getElementById('recovery-code-input');
+  if (codeIn) codeIn.value='';
+  _recoveryPlayerRecord = null;
+  document.getElementById('modal-pin-recovery').classList.remove('hidden');
+}
+
+function pinRecoveryBack() {
+  document.getElementById('pin-recovery-step2').classList.add('hidden');
+  document.getElementById('pin-recovery-step1').classList.remove('hidden');
+}
+
+async function sendPinResetEmail(resend) {
+  const handle = document.getElementById('recovery-handle').value.trim();
+  const email  = document.getElementById('recovery-email').value.trim().toLowerCase();
+  if (!handle || !email) { toast('Enter your handle and email','error'); return; }
+  const btn = document.getElementById('recovery-send-btn');
+  const msg1 = document.getElementById('recovery-msg1');
+  if (btn) { btn.disabled=true; btn.textContent='Sending…'; }
+  if (msg1) { msg1.classList.remove('hidden'); msg1.innerHTML='<span style="color:var(--muted)">Sending code…</span>'; }
+  try {
+    const res = await gas({ action: 'sendPinResetCode', handle, email });
+    if (res.error) {
+      if (msg1) { msg1.innerHTML=`<div class="config-block" style="color:var(--red);font-size:13px">❌ ${esc(res.error)}</div>`; }
+      if (btn) { btn.disabled=false; btn.textContent='Send Reset Code'; }
+      return;
+    }
+    _recoveryPlayerRecord = res; // {playerId, sheetId}
+    if (msg1) { msg1.innerHTML=`<div class="config-block" style="color:var(--green);font-size:13px">✓ Code sent to ${esc(email)}. Check your inbox.</div>`; }
+    setTimeout(()=>{
+      document.getElementById('pin-recovery-step1').classList.add('hidden');
+      document.getElementById('pin-recovery-step2').classList.remove('hidden');
+      document.getElementById('recovery-code-input')?.focus();
+    }, 1200);
+  } catch(e) {
+    if (msg1) { msg1.innerHTML=`<div class="config-block" style="color:var(--red);font-size:13px">Error: ${esc(e.message)}</div>`; }
+  } finally {
+    if (btn) { btn.disabled=false; btn.textContent = resend ? 'Resend Code' : 'Send Reset Code'; }
+  }
+}
+
+async function submitPinReset() {
+  const code   = (document.getElementById('recovery-code-input')?.value||'').trim();
+  const newPin = getPinValue('recpin');
+  const msg2   = document.getElementById('recovery-msg2');
+  if (!code || code.length !== 6) { toast('Enter the 6-digit code from your email','error'); return; }
+  if (newPin.length !== 4 || !/^\d{4}$/.test(newPin)) { toast('Enter a 4-digit PIN','error'); return; }
+  if (!_recoveryPlayerRecord) { toast('Session expired — start over','error'); openPinRecovery(); return; }
+  if (msg2) { msg2.classList.remove('hidden'); msg2.innerHTML='<span style="color:var(--muted)">Verifying…</span>'; }
+  try {
+    const res = await gas({
+      action: 'verifyPinResetCode',
+      playerId: _recoveryPlayerRecord.playerId,
+      sheetId:  _recoveryPlayerRecord.sheetId,
+      code,
+      newPinHash: hashStr(newPin)
+    });
+    if (res.error) {
+      if (msg2) msg2.innerHTML=`<div class="config-block" style="color:var(--red);font-size:13px">❌ ${esc(res.error)}</div>`;
+      return;
+    }
+    closeModal('modal-pin-recovery');
+    toast('PIN reset! Log in with your new PIN.','success');
+    _recoveryPlayerRecord = null;
+    clearPinBoxes('recpin');
+  } catch(e) {
+    if (msg2) msg2.innerHTML=`<div class="config-block" style="color:var(--red);font-size:13px">Error: ${esc(e.message)}</div>`;
+  }
+}
+function pinDigitInput(prefix, idx) {
+  const el = document.getElementById(prefix+idx);
+  // keep only digits
+  el.value = el.value.replace(/\D/g,'').slice(-1);
+  if (el.value) {
+    const next = document.getElementById(prefix+(idx+1));
+    if (next) next.focus();
+  }
+  syncPinHidden(prefix);
+}
+function pinDigitKey(prefix, idx, e) {
+  if (e.key==='Backspace') {
+    const el = document.getElementById(prefix+idx);
+    if (!el.value && idx>0) {
+      const prev = document.getElementById(prefix+(idx-1));
+      if (prev) { prev.value=''; prev.focus(); }
+    }
+    syncPinHidden(prefix);
+  }
+  if (e.key==='ArrowLeft' && idx>0) document.getElementById(prefix+(idx-1))?.focus();
+  if (e.key==='ArrowRight' && idx<3) document.getElementById(prefix+(idx+1))?.focus();
+}
+function getPinValue(prefix) {
+  return [0,1,2,3].map(i=>document.getElementById(prefix+i)?.value||'').join('');
+}
+function syncPinHidden(prefix) {
+  const map = {lpin:'login-pin', rpin:'reg-pin', rpin2a:'reg-pin2', recpin:'recovery-new-pin', recpin2a:'recovery-confirm-pin'};
+  const hiddenId = map[prefix];
+  if (hiddenId) document.getElementById(hiddenId).value = getPinValue(prefix);
+}
+function clearPinBoxes(prefix) {
+  [0,1,2,3].forEach(i=>{ const el=document.getElementById(prefix+i); if(el) el.value=''; });
+  syncPinHidden(prefix);
+}
+
+// ── PIN RECOVERY ──
+let _recoveryPlayerRecord = null;
+
+function openPinRecovery() {
+  document.getElementById('pin-recovery-step1').classList.remove('hidden');
+  document.getElementById('pin-recovery-step2').classList.add('hidden');
+  document.getElementById('recovery-handle').value='';
+  document.getElementById('recovery-result').classList.add('hidden');
+  clearPinBoxes('recpin'); clearPinBoxes('recpin2a');
+  _recoveryPlayerRecord = null;
+  document.getElementById('modal-pin-recovery').classList.remove('hidden');
+}
+
+async function startPinRecovery() {
+  const handle = document.getElementById('recovery-handle').value.trim();
+  if (!handle) { toast('Enter your handle','error'); return; }
+  const resultEl = document.getElementById('recovery-result');
+  resultEl.innerHTML = '<div class="loading-center" style="padding:16px"><div class="spinner"></div></div>';
+  resultEl.classList.remove('hidden');
+  try {
+    // Search all host sheets for this handle (no PIN required — just find the account)
+    const res = await gas({ action: 'findPlayerByHandle', handle });
+    if (res.error || !res.records || !res.records.length) {
+      resultEl.innerHTML = `<div class="config-block" style="color:var(--red);font-size:13px">❌ No account found for "<strong>${esc(handle)}</strong>". Double-check your handle and try again.</div>`;
+      return;
+    }
+    _recoveryPlayerRecord = res.records[0]; // {player, sheetId}
+    resultEl.innerHTML = `<div class="config-block" style="color:var(--green);font-size:13px">✓ Account found for <strong>${esc(handle)}</strong>. You can now set a new PIN.</div>`;
+    setTimeout(()=>{
+      document.getElementById('pin-recovery-step1').classList.add('hidden');
+      document.getElementById('pin-recovery-step2').classList.remove('hidden');
+      document.getElementById('recpin0')?.focus();
+    }, 900);
+  } catch(e) { resultEl.innerHTML = `<div class="config-block" style="color:var(--red);font-size:13px">Error: ${esc(e.message)}</div>`; }
+}
+
+async function submitPinReset() {
+  const newPin = getPinValue('recpin');
+  const confirmPin = getPinValue('recpin2a');
+  if (newPin.length !== 4) { toast('Enter a 4-digit PIN','error'); return; }
+  if (!/^\d{4}$/.test(newPin)) { toast('PIN must be 4 digits','error'); return; }
+  if (newPin !== confirmPin) { toast('PINs do not match','error'); return; }
+  if (!_recoveryPlayerRecord) { toast('Session expired — try again','error'); return; }
+  try {
+    const { player, sheetId } = _recoveryPlayerRecord;
+    // Load fresh player list
+    const allPlayers = await dbGetRows('Players', sheetId);
+    const idx = allPlayers.findIndex(p => p.id === player.id);
+    if (idx < 0) { toast('Player record not found','error'); return; }
+    const p = allPlayers[idx];
+    const newHash = hashStr(newPin);
+    await dbUpdate('Players', idx+2, [p.id, p.handle, newHash, p.authorized_events, p.created], sheetId);
+    closeModal('modal-pin-recovery');
+    toast('PIN reset! You can now log in with your new PIN.','success');
+    _recoveryPlayerRecord = null;
+    clearPinBoxes('recpin'); clearPinBoxes('recpin2a');
+  } catch(e) { toast('Error: '+e.message,'error'); }
+}
+function now() { return new Date().toISOString(); }
+function fmtDatetime(iso) {
+  if (!iso) return '—';
+  try { return new Date(iso).toLocaleString(); } catch(e) { return iso; }
+}
+function isBettingOpen(event, bet) {
+  const n = new Date();
+  const opens = event.opens ? new Date(event.opens) : null;
+  const deadline = (bet?.deadline && bet.deadline !== '') ? bet.deadline : event.deadline;
+  if (opens && n < opens) return false;
+  if (deadline && n > new Date(deadline)) return false;
+  return true;
+}
+function esc(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function toast(msg, type='info') {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span>${type==='success'?'✓':type==='error'?'✕':'ℹ'}</span> ${esc(msg)}`;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(()=>el.remove(), 3800);
+}
+
+// ── VIEW ROUTER ──
+const VIEWS = ['landing','host-login','host','player-join','player-register','player'];
+function showView(name) {
+  VIEWS.forEach(v => document.getElementById('view-'+v).classList.add('hidden'));
+  document.getElementById('view-'+name).classList.remove('hidden');
+  const tu = document.getElementById('topbar-user');
+  tu.classList.add('hidden');
+  if (name==='host') {
+    tu.classList.remove('hidden');
+    document.getElementById('topbar-name').textContent = appState.host?.name || appState.host?.email || 'Host';
+    const pb = document.getElementById('topbar-plan');
+    if (appState.host?.plan?.planName) { pb.textContent = appState.host.plan.planName; pb.classList.remove('hidden'); }
+    loadHostEvents();
+    populateAllEventSelects();
+    startChatRefresh();
+  }
+  if (name==='player') {
+    tu.classList.remove('hidden');
+    document.getElementById('topbar-name').textContent = appState.player?.handle || '';
+    document.getElementById('topbar-plan').classList.add('hidden');
+    loadPlayerEvents();
+    startChatRefresh();
+    startScoreRefresh();
+    startBetsRefresh();
+  }
+}
+function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.add('hidden')}));
+
+// ── HOST AUTH ──
+function showHostRegister() {
+  document.getElementById('host-login-form').classList.add('hidden');
+  document.getElementById('host-register-form').classList.remove('hidden');
+}
+function showHostLogin() {
+  document.getElementById('host-register-form').classList.add('hidden');
+  document.getElementById('host-login-form').classList.remove('hidden');
+}
+
+async function hostLogin() {
+  const email = document.getElementById('host-email').value.trim().toLowerCase();
+  const pw = document.getElementById('host-password').value;
+  if (!email || !pw) { toast('Enter email and password','error'); return; }
+  try {
+    const res = await gas({ action: 'hostLogin', email, pwHash: hashStr(pw) });
+    if (res.error) { toast(res.error,'error'); return; }
+    appState.host = res.host;
+    localStorage.setItem('propbet_host', JSON.stringify(res.host));
+    showView('host');
+    toast('Welcome back, ' + (res.host.name || res.host.email) + '!','success');
+  } catch(e) { toast('Error: '+e.message,'error'); }
+}
+
+async function hostRegister() {
+  const name  = document.getElementById('host-reg-name').value.trim();
+  const email = document.getElementById('host-reg-email').value.trim().toLowerCase();
+  const pw    = document.getElementById('host-reg-pw').value;
+  const pw2   = document.getElementById('host-reg-pw2').value;
+  if (!name || !email || !pw) { toast('Fill all fields','error'); return; }
+  if (pw !== pw2) { toast('Passwords do not match','error'); return; }
+  if (pw.length < 6) { toast('Password must be at least 6 characters','error'); return; }
+  try {
+    const res = await gas({ action: 'hostRegister', name, email, pwHash: hashStr(pw), plan: SETTINGS.defaultPlan });
+    if (res.error) { toast(res.error,'error'); return; }
+    appState.host = res.host;
+    localStorage.setItem('propbet_host', JSON.stringify(res.host));
+    showView('host');
+    toast('Account created! Welcome, '+name+'! 🎉','success');
+  } catch(e) { toast('Error: '+e.message,'error'); }
+}
+
+async function saveHostSettings() {
+  const name   = document.getElementById('set-host-name').value.trim();
+  const curPw  = document.getElementById('set-cur-pw').value;
+  const newPw  = document.getElementById('set-new-pw').value;
+  if (!curPw) { toast('Enter current password','error'); return; }
+  try {
+    const body = { action:'updateHost', hostId: appState.host.id, name, curPwHash: hashStr(curPw) };
+    if (newPw) body.newPwHash = hashStr(newPw);
+    const res = await gas(body);
+    if (res.error) { toast(res.error,'error'); return; }
+    appState.host.name = name;
+    localStorage.setItem('propbet_host', JSON.stringify(appState.host));
+    document.getElementById('topbar-name').textContent = name;
+    toast('Settings saved!','success');
+  } catch(e) { toast('Error: '+e.message,'error'); }
+}
+
+// ── HOST SHEET SETUP ──
+function showSheetSetupModal() {
+  document.getElementById('dev-email-display').textContent = SETTINGS.developerEmail || '(developer email not set)';
+  document.getElementById('modal-sheet-setup').classList.remove('hidden');
+}
+
+async function createAutoSheet() {
+  closeModal('modal-sheet-setup');
+  toast('Creating your Google Sheet…','info');
+  try {
+    const res = await gas({ action:'createHostSheet', hostId: appState.host.id, hostEmail: appState.host.email });
+    if (res.error) { toast('Error: '+res.error,'error'); return; }
+    appState.host.sheetId = res.sheetId;
+    localStorage.setItem('propbet_host', JSON.stringify(appState.host));
+    toast('Sheet created! ✓','success');
+    showHostModal('new-event'); // continue to creating the event
+  } catch(e) { toast('Error: '+e.message,'error'); }
+}
+
+async function useCustomSheet() {
+  const sheetId = document.getElementById('custom-sheet-id').value.trim();
+  if (!sheetId) { toast('Enter a Sheet ID','error'); return; }
+  try {
+    // Verify we can access it
+    const res = await gasForSheet(sheetId, { action:'ping' });
+    if (res.error) { toast('Cannot access that sheet. Make sure you shared it with '+SETTINGS.developerEmail+' as Editor.','error'); return; }
+    // Save it
+    const res2 = await gas({ action:'setHostSheet', hostId: appState.host.id, sheetId });
+    if (res2.error) { toast(res2.error,'error'); return; }
+    appState.host.sheetId = sheetId;
+    localStorage.setItem('propbet_host', JSON.stringify(appState.host));
+    closeModal('modal-sheet-setup');
+    toast('Sheet linked! ✓','success');
+    await gasForSheet(sheetId, { action:'initHostTabs' });
+    showHostModal('new-event');
+  } catch(e) { toast('Error: '+e.message,'error'); }
+}
+
+// ── HOST: EVENTS ──
+async function loadHostEvents() {
+  document.getElementById('host-events-list').innerHTML = '<div class="loading-center"><div class="spinner"></div></div>';
+  if (!appState.host.sheetId) {
+    document.getElementById('host-events-list').innerHTML = `
+      <div class="card" style="text-align:center;padding:40px">
+        <div style="font-size:40px;margin-bottom:12px">📋</div>
+        <h3 style="margin-bottom:8px">No Data Sheet Yet</h3>
+        <p class="muted mb-16">Create your first event to set up your data sheet.</p>
+        <button class="btn btn-primary" onclick="showHostModal('new-event')">+ Create First Event</button>
+      </div>`;
+    return;
+  }
+  try {
+    const [events, bets, players] = await Promise.all([
+      dbGetRows('Events', appState.host.sheetId),
+      dbGetRows('Bets',   appState.host.sheetId),
+      dbGetRows('Players',appState.host.sheetId)
+    ]);
+    appState.events = events;
+    appState._allBets = bets;
+    appState._allPlayers = players;
+    renderHostEvents();
+    renderUsageBar();
+  } catch(e) { toast('Error loading events: '+e.message,'error'); }
+}
+
+function renderUsageBar() {
+  const plan = appState.host.plan || SETTINGS.defaultPlan;
+  const evPct  = Math.round(appState.events.length / plan.maxEvents * 100);
+  const betPct = Math.round((appState._allBets||[]).length / plan.maxBets * 100);
+  const plPct  = Math.round((appState._allPlayers||[]).length / plan.maxPlayers * 100);
+  const bar = (val, max, pct) => `
+    <div style="flex:1;min-width:140px">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:3px">${val}/${max}</div>
+      <div class="limit-bar"><div class="limit-bar-fill ${pct>=100?'full':pct>=80?'warn':''}" style="width:${Math.min(pct,100)}%"></div></div>
+    </div>`;
+  document.getElementById('host-usage-bar').innerHTML = `
+    <div class="card" style="padding:12px 16px">
+      <div class="flex between center mb-8">
+        <span style="font-size:13px;font-weight:600">Plan: <span style="color:var(--accent)">${plan.planName||'Free'}</span></span>
+      </div>
+      <div class="flex gap-16 wrap">
+        <div style="flex:1;min-width:140px"><div style="font-size:11px;color:var(--muted);margin-bottom:3px">Events ${appState.events.length}/${plan.maxEvents}</div><div class="limit-bar"><div class="limit-bar-fill ${evPct>=100?'full':evPct>=80?'warn':''}" style="width:${Math.min(evPct,100)}%"></div></div></div>
+        <div style="flex:1;min-width:140px"><div style="font-size:11px;color:var(--muted);margin-bottom:3px">Bets ${(appState._allBets||[]).length}/${plan.maxBets}</div><div class="limit-bar"><div class="limit-bar-fill ${betPct>=100?'full':betPct>=80?'warn':''}" style="width:${Math.min(betPct,100)}%"></div></div></div>
+        <div style="flex:1;min-width:140px"><div style="font-size:11px;color:var(--muted);margin-bottom:3px">Players ${(appState._allPlayers||[]).length}/${plan.maxPlayers}</div><div class="limit-bar"><div class="limit-bar-fill ${plPct>=100?'full':plPct>=80?'warn':''}" style="width:${Math.min(plPct,100)}%"></div></div></div>
+      </div>
+    </div>`;
+}
+
+function renderHostEvents() {
+  const el = document.getElementById('host-events-list');
+  if (!appState.events.length) {
+    el.innerHTML = `<div class="card" style="text-align:center;padding:40px"><div style="font-size:40px;margin-bottom:12px">🎯</div><h3 style="margin-bottom:8px">No Events Yet</h3><p class="muted">Click <strong>+ New Event</strong> to create your first prop bet event.</p></div>`;
+    return;
+  }
+  const bets = appState._allBets || [];
+  const players = appState._allPlayers || [];
+  el.innerHTML = appState.events.map(ev => {
+    const evBets = bets.filter(b=>b.event_id===ev.id);
+    const evPlayers = players.filter(p=>(p.authorized_events||'').split(',').includes(ev.id));
+    const resolved = evBets.filter(b=>b.resolved==='true').length;
+    const n = new Date();
+    const isOpen = (!ev.opens||n>=new Date(ev.opens))&&(!ev.deadline||n<=new Date(ev.deadline));
+    return `
+    <div class="event-card">
+      <div class="event-info">
+        <h3>${esc(ev.name)}</h3>
+        <p>${esc(ev.description)}</p>
+        <div class="flex gap-8 mt-8 center wrap">
+          <span class="event-code" style="font-size:16px;letter-spacing:3px">${ev.code}</span>
+          <span class="pill ${isOpen?'pill-green':'pill-red'}">${isOpen?'Open':'Closed'}</span>
+          <span class="pill pill-yellow">${evBets.length} bets · ${resolved} resolved</span>
+          <span class="pill" style="background:rgba(52,152,219,.15);color:var(--blue)">${evPlayers.length} players</span>
+          <span class="pill ${ev.chat_enabled==='true'?'pill-green':'pill-red'}">${ev.chat_enabled==='true'?'💬 Chat ON':'Chat OFF'}</span>
+        </div>
+        <div class="flex gap-12 mt-8" style="font-size:12px;color:var(--muted)">
+          <span>Opens: ${fmtDatetime(ev.opens)}</span><span>Deadline: ${fmtDatetime(ev.deadline)}</span>
+        </div>
+      </div>
+      <div class="flex col gap-8" style="min-width:110px">
+        <button class="btn btn-secondary btn-sm" onclick="openEditEvent('${ev.id}')">✏️ Edit</button>
+        <button class="btn btn-secondary btn-sm" onclick="copyCode('${ev.code}')">📋 Copy Code</button>
+        <button class="btn btn-secondary btn-sm" onclick="openStatsForEvent('${ev.id}')">📊 Stats</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function showHostModal(name) {
+  if (name==='new-event') {
+    // Check plan limits
+    const plan = appState.host?.plan || SETTINGS.defaultPlan;
+    if (appState.events.length >= plan.maxEvents) {
+      toast(`Plan limit: max ${plan.maxEvents} events on the ${plan.planName} plan`,'error'); return;
+    }
+    // Need a sheet first
+    if (!appState.host?.sheetId) { showSheetSetupModal(); return; }
+    document.getElementById('modal-new-event').classList.remove('hidden');
+  }
+  if (name==='new-bet') {
+    const plan = appState.host?.plan || SETTINGS.defaultPlan;
+    if ((appState._allBets||[]).length >= plan.maxBets) {
+      toast(`Plan limit: max ${plan.maxBets} bets on the ${plan.planName} plan`,'error'); return;
+    }
+    populateAllEventSelects();
+    document.getElementById('modal-new-bet').classList.remove('hidden');
+  }
+}
+
+async function submitNewEvent() {
+  const name = document.getElementById('ev-name').value.trim();
+  const desc = document.getElementById('ev-desc').value.trim();
+  const opens = document.getElementById('ev-opens').value;
+  const deadline = document.getElementById('ev-deadline').value;
+  const chat = document.getElementById('ev-chat-enabled').checked;
+  const startingTokens = parseInt(document.getElementById('ev-tokens').value) || 1000;
+  if (!name) { toast('Event name required','error'); return; }
+  const ev = {
+    id: uid(), name, description: desc, code: generateCode(),
+    opens: opens ? new Date(opens).toISOString() : '',
+    deadline: deadline ? new Date(deadline).toISOString() : '',
+    chat_enabled: String(chat), starting_tokens: String(startingTokens), created: now()
+  };
+  try {
+    await dbAppend('Events', [ev.id,ev.name,ev.description,ev.code,ev.opens,ev.deadline,ev.chat_enabled,ev.starting_tokens,ev.created], appState.host.sheetId);
+    appState.events.push(ev);
+    renderHostEvents();
+    closeModal('modal-new-event');
+    populateAllEventSelects();
+    toast('Event created! Code: '+ev.code,'success');
+    // Clear form
+    ['ev-name','ev-desc','ev-opens','ev-deadline'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('ev-tokens').value='1000';
+    document.getElementById('ev-chat-enabled').checked=true;
+  } catch(e) { toast('Error: '+e.message,'error'); }
+}
+
+function openEditEvent(id) {
+  const ev = appState.events.find(e=>e.id===id);
+  if (!ev) return;
+  document.getElementById('edit-ev-id').value=ev.id;
+  document.getElementById('edit-ev-name').value=ev.name;
+  document.getElementById('edit-ev-desc').value=ev.description;
+  document.getElementById('edit-ev-opens').value=ev.opens?ev.opens.slice(0,16):'';
+  document.getElementById('edit-ev-deadline').value=ev.deadline?ev.deadline.slice(0,16):'';
+  document.getElementById('edit-ev-chat').checked=ev.chat_enabled==='true';
+  document.getElementById('edit-ev-tokens').value=ev.starting_tokens||'1000';
+  document.getElementById('modal-edit-event').classList.remove('hidden');
+}
+
+async function saveEditEvent() {
+  const id = document.getElementById('edit-ev-id').value;
+  try {
+    const allEvents = await dbGetRows('Events', appState.host.sheetId);
+    const idx = allEvents.findIndex(r=>r.id===id);
+    if (idx<0) { toast('Event not found','error'); return; }
+    const startingTokens = parseInt(document.getElementById('edit-ev-tokens').value) || 1000;
+    const ev = {
+      id, name: document.getElementById('edit-ev-name').value.trim(),
+      description: document.getElementById('edit-ev-desc').value.trim(),
+      code: allEvents[idx].code,
+      opens: document.getElementById('edit-ev-opens').value ? new Date(document.getElementById('edit-ev-opens').value).toISOString():'',
+      deadline: document.getElementById('edit-ev-deadline').value ? new Date(document.getElementById('edit-ev-deadline').value).toISOString():'',
+      chat_enabled: String(document.getElementById('edit-ev-chat').checked),
+      starting_tokens: String(startingTokens),
+      created: allEvents[idx].created
+    };
+    await dbUpdate('Events', idx+2, [ev.id,ev.name,ev.description,ev.code,ev.opens,ev.deadline,ev.chat_enabled,ev.starting_tokens,ev.created], appState.host.sheetId);
+    const li = appState.events.findIndex(e=>e.id===id);
+    if (li>=0) Object.assign(appState.events[li], ev);
+    renderHostEvents();
+    closeModal('modal-edit-event');
+    toast('Event updated!','success');
+  } catch(e) { toast('Error: '+e.message,'error'); }
+}
+
+// ── HOST: BETS ──
+async function loadHostBets() {
+  const eventId = document.getElementById('host-bet-event-select').value;
+  const el = document.getElementById('host-bets-list');
+  if (!eventId||!appState.host.sheetId) { el.innerHTML=''; return; }
+  el.innerHTML='<div class="loading-center"><div class="spinner"></div></div>';
+  try {
+    const [allBets, allEntries, allPlayers] = await Promise.all([
+      dbGetRows('Bets',    appState.host.sheetId),
+      dbGetRows('Entries', appState.host.sheetId),
+      dbGetRows('Players', appState.host.sheetId)
+    ]);
+    appState._allBets    = allBets;
+    appState._allPlayers = allPlayers;
+    const bets    = allBets.filter(b=>b.event_id===eventId && b.resolved!=='deleted' && b.question);
+    const entries = allEntries.filter(e=>e.event_id===eventId);
+    const players = allPlayers.filter(p=>(p.authorized_events||'').split(',').includes(eventId));
+    renderHostBets(bets, entries, players);
+  } catch(e) { toast('Error: '+e.message,'error'); }
+}
+
+function renderHostBets(bets, entries, players) {
+  const el = document.getElementById('host-bets-list');
+  if (!bets.length) { el.innerHTML='<div class="card" style="text-align:center;color:var(--muted);padding:30px">No bets for this event yet. Click <strong>+ Add Bet</strong> to get started.</div>'; return; }
+
+  const playerMap = {};
+  players.forEach(p => { playerMap[p.id] = p.handle; });
+
+  el.innerHTML = bets.map(b => {
+    const resolved   = b.resolved === 'true';
+    const betEntries = entries.filter(e => e.bet_id === b.id);
+    const aEntries   = betEntries.filter(e => e.choice === 'a');
+    const bEntries   = betEntries.filter(e => e.choice === 'b');
+    const tokA       = aEntries.reduce((s,e)=>s+(parseInt(e.tokens)||0),0);
+    const tokB       = bEntries.reduce((s,e)=>s+(parseInt(e.tokens)||0),0);
+    const totalTok   = tokA + tokB;
+    const aPct       = totalTok > 0 ? Math.round(tokA / totalTok * 100) : 50;
+    const bPct       = 100 - aPct;
+    // Parimutuel payout multipliers
+    const mA = tokA > 0 ? (totalTok / tokA).toFixed(2) : '—';
+    const mB = tokB > 0 ? (totalTok / tokB).toFixed(2) : '—';
+
+    const bettedIds = new Set(betEntries.map(e => e.player_id));
+    const noBet     = players.filter(p => !bettedIds.has(p.id));
+
+    const statusBadge = resolved
+      ? `<span class="bet-status-badge badge-resolved">✓ ${esc(b.correct_option)}</span>`
+      : `<span class="bet-status-badge badge-open">Open</span>`;
+
+    const resolveButtons = resolved ? '' : `
+      <button class="btn btn-success btn-xs" onclick="resolveBet('${b.id}','${esc(b.option_a)}')">✓ ${esc(b.option_a)}</button>
+      <button class="btn btn-success btn-xs" onclick="resolveBet('${b.id}','${esc(b.option_b)}')">✓ ${esc(b.option_b)}</button>`;
+
+    // Per-player pick rows with token amounts
+    const pickRows = players.map(p => {
+      const entry = betEntries.find(e => e.player_id === p.id);
+      if (!entry) {
+        return `<tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:6px 12px;font-weight:600;font-size:13px">${esc(p.handle)}</td>
+          <td style="padding:6px 12px;text-align:center;color:var(--muted);font-size:12px">— no pick —</td>
+          <td style="padding:6px 12px;text-align:center;color:var(--muted);font-size:12px">—</td>
+        </tr>`;
+      }
+      const label = entry.choice === 'a' ? esc(b.option_a) : esc(b.option_b);
+      const tok   = parseInt(entry.tokens)||0;
+      let cls = '';
+      if (resolved) {
+        const cc = b.correct_option === b.option_a ? 'a' : 'b';
+        cls = entry.choice === cc ? 'pc-win' : 'pc-loss';
+      } else {
+        cls = entry.choice === 'a' ? 'pc-pend1' : 'pc-pend0';
+      }
+      // Potential payout for this player
+      const sideTok = entry.choice === 'a' ? tokA : tokB;
+      const payout  = sideTok > 0 ? ((totalTok / sideTok) * tok).toFixed(0) : '—';
+      return `<tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:6px 12px;font-weight:600;font-size:13px">${esc(p.handle)}</td>
+        <td style="padding:6px 12px;text-align:center">
+          <span class="${cls}" style="font-family:'DM Mono';font-size:13px;font-weight:700">${label}</span>
+        </td>
+        <td style="padding:6px 12px;text-align:center;font-family:'DM Mono';font-size:13px">
+          <span style="color:var(--accent);font-weight:700">${tok}</span>
+          ${resolved ? `<span style="color:var(--muted);font-size:11px"> → ${cls==='pc-win'?`<span style="color:var(--green)">+${payout}</span>`:`<span style="color:var(--red)">−${tok}</span>`}</span>` : `<span style="color:var(--muted);font-size:11px"> (~${payout})</span>`}
+        </td>
+      </tr>`;
+    }).join('');
+
+    return `<div class="bet-row" style="margin-bottom:16px">
+      <div class="flex between center mb-8" style="flex-wrap:wrap;gap:8px">
+        <div class="bet-question" style="margin:0">${esc(b.question)}${b.deadline?`<div style="font-size:11px;color:var(--muted);margin-top:2px">Deadline: ${fmtDatetime(b.deadline)}</div>`:''}</div>
+        <div class="flex gap-8 center" style="flex-wrap:wrap">${statusBadge}</div>
+      </div>
+
+      <div class="stat-bar-wrap mb-8">
+        <div class="stat-bar-label">
+          <span><strong style="color:var(--accent)">${esc(b.option_a)}</strong> — ${tokA} tok (${aPct}%) · ×${mA}</span>
+          <span>×${mB} · ${tokB} tok (${bPct}%) — <strong style="color:var(--accent2)">${esc(b.option_b)}</strong></span>
+        </div>
+        <div class="stat-bar-track"><div class="stat-bar-a" style="width:${aPct}%"></div><div class="stat-bar-b" style="width:${bPct}%"></div></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">Total pool: ${totalTok} tokens · ${betEntries.length} player${betEntries.length!==1?'s':''} wagered${noBet.length?` · ${noBet.length} haven't bet`:''}</div>
+      </div>
+
+      ${players.length ? `<div style="overflow-x:auto;margin-bottom:10px">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;min-width:280px">
+          <thead><tr style="background:var(--surface2)">
+            <th style="padding:6px 12px;text-align:left;font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--border)">Player</th>
+            <th style="padding:6px 12px;text-align:center;font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--border)">Pick</th>
+            <th style="padding:6px 12px;text-align:center;font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--border)">Tokens → Payout</th>
+          </tr></thead>
+          <tbody>${pickRows}</tbody>
+        </table>
+      </div>` : '<p class="muted" style="font-size:13px;margin-bottom:10px">No players in this event yet.</p>'}
+
+      <div class="host-resolve-btns">
+        ${!resolved ? `<span style="font-size:12px;color:var(--muted)">Mark correct:</span>${resolveButtons}` : ''}
+        ${!resolved ? `<button class="btn btn-secondary btn-xs" onclick="openEditBet('${b.id}')">✏️ Edit</button>` : ''}
+        ${!resolved ? `<button class="btn btn-danger btn-xs" onclick="confirmDeleteBet('${b.id}')">🗑</button>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function createBet() {
+  const eventId = document.getElementById('host-bet-event-select').value;
+  if (!eventId) { toast('Select an event first','error'); return; }
+  const q=document.getElementById('bet-q').value.trim();
+  const a=document.getElementById('bet-a').value.trim();
+  const b=document.getElementById('bet-b').value.trim();
+  if (!q||!a||!b) { toast('Fill all fields','error'); return; }
+  const useCustom=document.getElementById('bet-use-custom-deadline').checked;
+  const dl=useCustom&&document.getElementById('bet-deadline').value ? new Date(document.getElementById('bet-deadline').value).toISOString():'';
+  try {
+    await dbAppend('Bets',[uid(),eventId,q,a,b,dl,'false','',now()],appState.host.sheetId);
+    closeModal('modal-new-bet');
+    ['bet-q','bet-a','bet-b'].forEach(id=>document.getElementById(id).value='');
+    loadHostBets();
+    toast('Bet added!','success');
+  } catch(e) { toast('Error: '+e.message,'error'); }
+}
+
+async function resolveBet(betId, correctOption, skipReload=false) {
+  if (!confirm(`Mark "${correctOption}" as correct? This cannot be undone.`)) return;
+  try {
+    const allBets = await dbGetRows('Bets', appState.host.sheetId);
+    const idx = allBets.findIndex(b=>b.id===betId);
+    if (idx<0) { toast('Bet not found','error'); return; }
+    const b=allBets[idx];
+    await dbUpdate('Bets',idx+2,[b.id,b.event_id,b.question,b.option_a,b.option_b,b.deadline,'true',correctOption,b.created],appState.host.sheetId);
+    toast('✓ Resolved: '+correctOption,'success');
+    if (!skipReload) loadHostBets();
+  } catch(e) { toast('Error: '+e.message,'error'); }
+}
+async function resolveBetFromStats(betId, correctOption) { await resolveBet(betId,correctOption,true); loadHostStats(); }
+
+function openEditBet(betId) {
+  // Find bet in current list
+  const bets = appState._allBets || [];
+  const b = bets.find(x=>x.id===betId);
+  if (!b) { toast('Bet not found','error'); return; }
+  document.getElementById('edit-bet-id').value = b.id;
+  document.getElementById('edit-bet-q').value = b.question;
+  document.getElementById('edit-bet-a').value = b.option_a;
+  document.getElementById('edit-bet-b').value = b.option_b;
+  document.getElementById('edit-bet-deadline').value = b.deadline ? new Date(b.deadline).toISOString().slice(0,16) : '';
+  document.getElementById('modal-edit-bet').classList.remove('hidden');
+}
+
+async function saveEditBet() {
+  const id = document.getElementById('edit-bet-id').value;
+  const q  = document.getElementById('edit-bet-q').value.trim();
+  const a  = document.getElementById('edit-bet-a').value.trim();
+  const b  = document.getElementById('edit-bet-b').value.trim();
+  const dl = document.getElementById('edit-bet-deadline').value;
+  if (!q||!a||!b) { toast('Fill all fields','error'); return; }
+  try {
+    const allBets = await dbGetRows('Bets', appState.host.sheetId);
+    const idx = allBets.findIndex(x=>x.id===id);
+    if (idx<0) { toast('Bet not found','error'); return; }
+    const old = allBets[idx];
+    const deadline = dl ? new Date(dl).toISOString() : '';
+    await dbUpdate('Bets', idx+2,
+      [old.id, old.event_id, q, a, b, deadline, old.resolved, old.correct_option, old.created],
+      appState.host.sheetId);
+    closeModal('modal-edit-bet');
+    toast('Bet updated!','success');
+    loadHostBets();
+  } catch(e) { toast('Error: '+e.message,'error'); }
+}
+
+function confirmDeleteBet(betId) {
+  if (!confirm('Delete this bet? This will also remove all player entries for it.')) return;
+  deleteBet(betId);
+}
+
+async function deleteBet(betId) {
+  // We can't truly delete a row from Sheets API without batchUpdate.
+  // Instead we blank the row so it becomes invisible, or we overwrite with a deleted marker.
+  // Best approach: mark it deleted by clearing the question field and setting resolved='deleted'
+  try {
+    const allBets = await dbGetRows('Bets', appState.host.sheetId);
+    const idx = allBets.findIndex(x=>x.id===(betId || document.getElementById('edit-bet-id').value));
+    if (idx<0) { toast('Bet not found','error'); return; }
+    const b = allBets[idx];
+    // Overwrite with empty question so it gets filtered out on render
+    await dbUpdate('Bets', idx+2,
+      [b.id, b.event_id, '', b.option_a, b.option_b, b.deadline, 'deleted', '', b.created],
+      appState.host.sheetId);
+    closeModal('modal-edit-bet');
+    toast('Bet deleted','success');
+    loadHostBets();
+  } catch(e) { toast('Error: '+e.message,'error'); }
+}
+
+// ── HOST: STATS ──
+function openStatsForEvent(eventId) {
+  populateAllEventSelects();
+  const sel=document.getElementById('host-stats-event-select');
+  if (sel) sel.value=eventId;
+  hostTab('stats');
+}
+async function loadHostStats() {
+  const eventId=document.getElementById('host-stats-event-select').value;
+  if (!eventId||!appState.host.sheetId) return;
+  const el=document.getElementById('host-stats-list');
+  el.innerHTML='<div class="loading-center"><div class="spinner"></div></div>';
+  try {
+    const [allBets,allEntries,allPlayers]=await Promise.all([
+      dbGetRows('Bets',appState.host.sheetId),
+      dbGetRows('Entries',appState.host.sheetId),
+      dbGetRows('Players',appState.host.sheetId)
+    ]);
+    appState._allBets=allBets; appState._allPlayers=allPlayers;
+    const bets=allBets.filter(b=>b.event_id===eventId);
+    const entries=allEntries.filter(e=>e.event_id===eventId);
+    const playerMap={};
+    allPlayers.forEach(p=>{playerMap[p.id]=p.handle;});
+    if (!bets.length){el.innerHTML='<div class="card" style="text-align:center;color:var(--muted);padding:30px">No bets for this event.</div>';return;}
+    el.innerHTML=bets.map(b=>{
+      const be=entries.filter(e=>e.bet_id===b.id);
+      const aE=be.filter(e=>e.choice==='a'), bE=be.filter(e=>e.choice==='b');
+      const total=be.length, aPct=total>0?Math.round(aE.length/total*100):50, bPct=100-aPct;
+      const allIds=[...new Set(entries.map(e=>e.player_id))];
+      const betIds=new Set(be.map(e=>e.player_id));
+      const noBet=allIds.filter(id=>!betIds.has(id)).map(id=>playerMap[id]||'?');
+      return `<div class="bet-row">
+        <div class="flex between center mb-8">
+          <div class="bet-question">${esc(b.question)}</div>
+          ${b.resolved==='true'?`<span class="bet-status-badge badge-resolved">✓ ${esc(b.correct_option)}</span>`:''}
+        </div>
+        <div class="stat-bar-wrap">
+          <div class="stat-bar-label">
+            <span><strong style="color:var(--accent)">${esc(b.option_a)}</strong> — ${aE.length} picks (${aPct}%)</span>
+            <span>${bE.length} picks (${bPct}%) — <strong style="color:var(--accent2)">${esc(b.option_b)}</strong></span>
+          </div>
+          <div class="stat-bar-track"><div class="stat-bar-a" style="width:${aPct}%"></div><div class="stat-bar-b" style="width:${bPct}%"></div></div>
+        </div>
+        <div style="margin-top:10px"><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px">${esc(b.option_a)} picks:</div>
+          <div class="stat-names">${aE.length?aE.map(e=>`<span class="stat-name-pill stat-name-a">${esc(playerMap[e.player_id]||'?')}</span>`).join(''):'<span class="stat-name-pill stat-name-none">none yet</span>'}</div>
+        </div>
+        <div style="margin-top:8px"><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px">${esc(b.option_b)} picks:</div>
+          <div class="stat-names">${bE.length?bE.map(e=>`<span class="stat-name-pill stat-name-b">${esc(playerMap[e.player_id]||'?')}</span>`).join(''):'<span class="stat-name-pill stat-name-none">none yet</span>'}</div>
+        </div>
+        ${noBet.length?`<div style="margin-top:8px"><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px">Haven't bet:</div><div class="stat-names">${noBet.map(n=>`<span class="stat-name-pill stat-name-none">${esc(n)}</span>`).join('')}</div></div>`:''}
+        <div class="bet-meta mt-8">
+          <span>Total: ${total}</span>
+          <span>Payout ${esc(b.option_a)}: ×${total>0&&aE.length>0?(total/aE.length).toFixed(2):'—'}</span>
+          <span>Payout ${esc(b.option_b)}: ×${total>0&&bE.length>0?(total/bE.length).toFixed(2):'—'}</span>
+        </div>
+        ${b.resolved!=='true'?`<div class="host-resolve-btns">
+          <span style="font-size:12px;color:var(--muted)">Mark correct:</span>
+          <button class="btn btn-success btn-xs" onclick="resolveBetFromStats('${b.id}','${esc(b.option_a)}')">✓ ${esc(b.option_a)}</button>
+          <button class="btn btn-success btn-xs" onclick="resolveBetFromStats('${b.id}','${esc(b.option_b)}')">✓ ${esc(b.option_b)}</button>
+        </div>`:''}
+      </div>`;
+    }).join('');
+    // Update chat event
+    const ev=appState.events.find(e=>e.id===eventId);
+    if (ev) { appState.currentEventId=eventId; setupChatForEvent(ev); }
+  } catch(e) { el.innerHTML=`<div class="card" style="color:var(--red);padding:20px">Error: ${esc(e.message)}</div>`; }
+}
+
+// ── HOST: PLAYERS ──
+async function loadHostPlayers() {
+  const eventId=document.getElementById('host-players-event-select').value;
+  if (!eventId||!appState.host.sheetId) return;
+  try {
+    const allPlayers=await dbGetRows('Players',appState.host.sheetId);
+    appState._allPlayers=allPlayers;
+    const inEvent=allPlayers.filter(p=>(p.authorized_events||'').split(',').includes(eventId));
+    const notIn=allPlayers.filter(p=>!(p.authorized_events||'').split(',').includes(eventId));
+    const el=document.getElementById('host-players-list');
+    let html='';
+    if (!inEvent.length) html+='<div class="card mb-12" style="text-align:center;color:var(--muted);padding:24px">No players registered for this event yet.</div>';
+    else html+=`<div class="card mb-12"><table class="scoreboard-table">
+      <thead><tr><th>#</th><th>Handle</th><th>Joined</th><th>Action</th></tr></thead>
+      <tbody>${inEvent.map((p,i)=>`<tr><td>${i+1}</td><td><strong>${esc(p.handle)}</strong></td><td>${fmtDatetime(p.created)}</td><td><button class="btn btn-danger btn-xs" onclick="removePlayerFromEvent('${p.id}','${eventId}')">Remove</button></td></tr>`).join('')}</tbody>
+    </table></div>`;
+    if (notIn.length) html+=`<div class="card"><h3 style="font-family:'Bebas Neue';font-size:20px;letter-spacing:1px;margin-bottom:12px">Add Existing Player</h3>
+      <div class="flex gap-8 center flex-wrap">
+        <select id="add-player-select" style="flex:1;max-width:260px">${notIn.map(p=>`<option value="${p.id}">${esc(p.handle)}</option>`).join('')}</select>
+        <button class="btn btn-success btn-sm" onclick="addPlayerToEvent('${eventId}')">+ Add</button>
+      </div></div>`;
+    el.innerHTML=html;
+  } catch(e) { toast('Error: '+e.message,'error'); }
+}
+
+async function addPlayerToEvent(eventId) {
+  const pid=document.getElementById('add-player-select').value;
+  if (!pid) return;
+  try {
+    const all=await dbGetRows('Players',appState.host.sheetId);
+    const idx=all.findIndex(p=>p.id===pid);
+    if (idx<0) { toast('Player not found','error'); return; }
+    const p=all[idx];
+    const evs=(p.authorized_events||'').split(',').filter(Boolean);
+    if (!evs.includes(eventId)) evs.push(eventId);
+    await dbUpdate('Players',idx+2,[p.id,p.handle,p.pin_hash,evs.join(','),p.created],appState.host.sheetId);
+    toast(p.handle+' added!','success'); loadHostPlayers();
+  } catch(e) { toast('Error: '+e.message,'error'); }
+}
+
+async function removePlayerFromEvent(playerId, eventId) {
+  if (!confirm('Remove this player from the event?')) return;
+  try {
+    const all=await dbGetRows('Players',appState.host.sheetId);
+    const idx=all.findIndex(p=>p.id===playerId);
+    if (idx<0) return;
+    const p=all[idx];
+    const evs=(p.authorized_events||'').split(',').filter(id=>id!==eventId);
+    await dbUpdate('Players',idx+2,[p.id,p.handle,p.pin_hash,evs.join(','),p.created],appState.host.sheetId);
+    toast('Player removed','success'); loadHostPlayers();
+  } catch(e) { toast('Error: '+e.message,'error'); }
+}
+
+// ── HOST: INVITE ──
+function updateInviteLink() {
+  const sel=document.getElementById('invite-event-select');
+  const ev=appState.events.find(e=>e.id===sel.value);
+  if (!ev) return;
+  const baseUrl = window.location.origin + window.location.pathname;
+  const url=`${baseUrl}?code=${ev.code}`;
+  document.getElementById('invite-link-box').textContent=url;
+}
+
+async function sendInvites() {
+  const eventId=document.getElementById('invite-event-select').value;
+  const emails=document.getElementById('invite-emails').value.trim();
+  const msg=document.getElementById('invite-message').value.trim();
+  const ev=appState.events.find(e=>e.id===eventId);
+  if (!ev||!emails) { toast('Select event and enter emails','error'); return; }
+
+  // Build a robust absolute join URL
+  const baseUrl = (window.location.origin + window.location.pathname).replace(/\/+$/, '');
+  const joinUrl = `${baseUrl}?code=${ev.code}`;
+  document.getElementById('invite-link-box').textContent=joinUrl;
+
+  const emailList=emails.split(',').map(e=>e.trim()).filter(Boolean);
+  const html=`<!DOCTYPE html>
+<html><head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background:#0a0a0f;font-family:Arial,sans-serif">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a0f;padding:32px 16px">
+<tr><td align="center">
+<table width="100%" style="max-width:500px;background:#12121a;border-radius:12px;overflow:hidden;border:1px solid #2a2a3d">
+  <tr><td style="background:#f0c040;padding:20px 32px;text-align:center">
+    <h1 style="margin:0;font-family:Arial Black,sans-serif;font-size:32px;color:#0a0a0f;letter-spacing:4px">PROPBET</h1>
+  </td></tr>
+  <tr><td style="padding:32px">
+    <h2 style="color:#f0c040;margin:0 0 12px">You're invited!</h2>
+    <p style="color:#e8e8f0;font-size:15px;margin:0 0 8px">You've been invited to join <strong style="color:#f0c040">${esc(ev.name)}</strong> on PropBet.</p>
+    ${msg?`<p style="color:#e8e8f0;font-size:14px;margin:8px 0 0;font-style:italic">${esc(msg)}</p>`:''}
+    <div style="margin:28px 0;text-align:center">
+      <a href="${joinUrl}" style="display:inline-block;padding:14px 32px;background:#f0c040;color:#0a0a0f;font-weight:bold;font-size:16px;text-decoration:none;font-family:Arial,sans-serif;border-radius:8px">Join the Action →</a>
+    </div>
+    <p style="color:#7070a0;font-size:13px;margin:0 0 4px">Button not working? Copy and paste this link into your browser:</p>
+    <p style="margin:0 0 4px;word-break:break-all;font-size:13px"><a href="${joinUrl}" style="color:#f0c040">${joinUrl}</a></p>
+    <p style="color:#7070a0;font-size:13px;margin:16px 0 0">Or go to the app and enter invite code: <strong style="color:#e8e8f0;font-family:monospace;font-size:16px;letter-spacing:3px">${ev.code}</strong></p>
+    <hr style="border:none;border-top:1px solid #2a2a3d;margin:20px 0">
+    <p style="color:#7070a0;font-size:11px;margin:0">PropBet — crowd prop-bet pools</p>
+  </td></tr>
+</table>
+</td></tr></table>
+</body></html>`;
+  let sent=0,failed=0,errors=[];
+  for (const email of emailList) {
+    try {
+      const res=await gas({action:'sendEmail',to:email,subject:`You're invited to ${ev.name} on PropBet`,html});
+      if (res.ok) sent++; else { failed++; errors.push(res.error||'unknown'); }
+    } catch(e) { failed++; errors.push(e.message); }
+  }
+  if (sent>0) toast(`✓ Sent ${sent} invite${sent!==1?'s':''}!`,'success');
+  if (failed>0) toast(`${failed} failed: ${errors[0]}`,'error');
+}
+
+function copyInviteLink() { navigator.clipboard.writeText(document.getElementById('invite-link-box').textContent).then(()=>toast('Link copied!','success')); }
+function copyCode(code) { navigator.clipboard.writeText(code).then(()=>toast(`Code ${code} copied!`,'success')); }
+
+// ── HOST TABS ──
+function hostTab(name, btn) {
+  ['events','bets','stats','players','invite','settings'].forEach(t=>document.getElementById('host-tab-'+t).classList.add('hidden'));
+  document.getElementById('host-tab-'+name).classList.remove('hidden');
+  document.querySelectorAll('#view-host .tab-btn').forEach(b=>b.classList.remove('active'));
+  if (btn&&btn.classList) btn.classList.add('active');
+  else document.querySelectorAll('#view-host .tab-btn').forEach(b=>{if(b.getAttribute('onclick')&&b.getAttribute('onclick').includes(`'${name}'`))b.classList.add('active')});
+  if (name==='bets') loadHostBets();
+  if (name==='stats') { populateAllEventSelects(); loadHostStats(); }
+  if (name==='players') loadHostPlayers();
+  if (name==='invite') { populateAllEventSelects(); updateInviteLink(); }
+  if (name==='settings') {
+    document.getElementById('set-host-name').value=appState.host?.name||'';
+    const sid=appState.host?.sheetId;
+    document.getElementById('host-sheet-info').innerHTML=sid
+      ? `<p style="font-size:13px;color:var(--muted)">Your data is stored in a Google Sheet.</p>
+         <a href="https://docs.google.com/spreadsheets/d/${sid}/edit" target="_blank" class="btn btn-secondary btn-sm mt-8">Open Sheet ↗</a>`
+      : `<p style="font-size:13px;color:var(--muted)">No sheet linked yet. Create an event to set one up.</p>`;
+  }
+}
+
+function populateAllEventSelects() {
+  ['host-bet-event-select','host-players-event-select','invite-event-select','host-stats-event-select'].forEach(id=>{
+    const sel=document.getElementById(id);
+    if (!sel) return;
+    sel.innerHTML=appState.events.length
+      ? appState.events.map(e=>`<option value="${e.id}">${esc(e.name)} (${e.code})</option>`).join('')
+      : '<option value="">No events yet</option>';
+  });
+  updateInviteLink();
+  if (appState.role==='host'&&appState.events.length) {
+    const chatEv=appState.events.find(e=>e.chat_enabled==='true')||appState.events[0];
+    if (chatEv) { appState.currentEventId=chatEv.id; setupChatForEvent(chatEv); }
+  }
+}
+
+// ── PLAYER: INVITE CODE VALIDATION ──
+// Players look up events across ALL host sheets via the master script
+let pendingCode=null;
+let _handleCheckTimer = null;
+
+async function checkHandleAvailability(value) {
+  const msg = document.getElementById('handle-check-msg');
+  if (!msg) return;
+  const handle = value.trim();
+  if (handle.length < 2) { msg.textContent=''; return; }
+  msg.innerHTML = '<span style="color:var(--muted)">Checking…</span>';
+  clearTimeout(_handleCheckTimer);
+  _handleCheckTimer = setTimeout(async () => {
+    try {
+      const res = await gas({ action: 'findPlayerByHandle', handle });
+      if (res.ok && res.records && res.records.length > 0) {
+        msg.innerHTML = `<span style="color:var(--red)">✕ "${esc(handle)}" is already taken</span>`;
+      } else {
+        msg.innerHTML = `<span style="color:var(--green)">✓ "${esc(handle)}" is available</span>`;
+      }
+    } catch(e) { msg.textContent=''; }
+  }, 600);
+}
+
+async function validateInviteCode() {
+  const code=document.getElementById('join-code').value.trim().toUpperCase();
+  if (!code) { toast('Enter invite code','error'); return; }
+  try {
+    const res=await gas({action:'findEventByCode', code});
+    if (res.error||!res.event) { toast('Code not found — check and try again','error'); return; }
+    pendingCode={code, eventId:res.event.id, eventName:res.event.name, sheetId:res.sheetId};
+    document.getElementById('reg-event-name').textContent=res.event.name;
+    showView('player-register');
+  } catch(e) { toast('Error: '+e.message,'error'); }
+}
+
+async function registerPlayer() {
+  const handle=document.getElementById('reg-handle').value.trim();
+  const email =(document.getElementById('reg-email')?.value||'').trim().toLowerCase();
+  const pin = document.getElementById('reg-pin').value || getPinValue('rpin');
+  const pin2 = document.getElementById('reg-pin2').value || getPinValue('rpin2a');
+  if (!handle||!pin) { toast('Fill all fields','error'); return; }
+  if (!email) { toast('Email is required for PIN recovery','error'); return; }
+  if (pin!==pin2) { toast('PINs do not match','error'); return; }
+  if (!/^\d{4}$/.test(pin)) { toast('PIN must be 4 digits','error'); return; }
+  if (handle.length < 2) { toast('Handle must be at least 2 characters','error'); return; }
+  try {
+    const globalCheck = await gas({ action: 'findPlayerByHandle', handle });
+    if (globalCheck.ok && globalCheck.records && globalCheck.records.length > 0) {
+      toast(`"${handle}" is already taken — choose a different handle`, 'error');
+      document.getElementById('reg-handle').focus();
+      return;
+    }
+    const existing=await dbGetRows('Players',pendingCode.sheetId);
+    if (existing.find(p=>p.handle.toLowerCase()===handle.toLowerCase())) {
+      toast('Handle taken — choose another','error');
+      document.getElementById('reg-handle').focus();
+      return;
+    }
+    const player={id:uid(),handle,email,pin_hash:hashStr(pin),authorized_events:pendingCode.eventId,created:now()};
+    await dbAppend('Players',[player.id,player.handle,player.email,player.pin_hash,player.authorized_events,player.created],pendingCode.sheetId);
+    const playerSheets={ [pendingCode.eventId]: pendingCode.sheetId };
+    appState.player=player;
+    appState.playerSheets=playerSheets;
+    savePlayerSession(player, playerSheets);
+    toast('Welcome, '+handle+'! 🎲','success');
+    showView('player');
+  } catch(e) { toast('Error: '+e.message,'error'); }
+}
+
+async function playerLogin() {
+  if (!rlCheck()) return;
+  const handle=document.getElementById('login-handle').value.trim();
+  // Support both hidden aggregated input (pin boxes) and legacy direct input
+  const pin = document.getElementById('login-pin').value || getPinValue('lpin');
+  if (!handle||!pin) { toast('Enter handle and PIN','error'); return; }
+  try {
+    // findPlayerAll returns all sheets this player is registered on
+    const res=await gas({action:'findPlayerAll',handle,pinHash:hashStr(pin)});
+    if (res.error||!res.records||!res.records.length) {
+      rlRecord(false);
+      toast('Invalid handle or PIN','error');
+      return;
+    }
+    rlRecord(true);
+    // res.records = [{player, sheetId}, ...]
+    // Build playerSheets map from all records
+    const playerSheets={};
+    let canonPlayer=null;
+    for (const rec of res.records) {
+      canonPlayer=canonPlayer||rec.player;
+      const evs=(rec.player.authorized_events||'').split(',').filter(Boolean);
+      evs.forEach(evId=>{ playerSheets[evId]=rec.sheetId; });
+    }
+    appState.player=canonPlayer;
+    appState.playerSheets=playerSheets;
+    savePlayerSession(canonPlayer, playerSheets);
+    toast('Welcome back, '+canonPlayer.handle+'!','success');
+    showView('player');
+  } catch(e) { toast('Error: '+e.message,'error'); }
+}
+
+// Helper: save player session to localStorage
+function savePlayerSession(player, playerSheets) {
+  localStorage.setItem('propbet_player', JSON.stringify({ player, playerSheets }));
+}
+
+// Helper: get sheetId for a given eventId
+function sheetForEvent(eventId) {
+  return appState.playerSheets?.[eventId] || null;
+}
+
+function logout() {
+  if (isDirty() && !confirmNavigateAway('You have unsaved bets. Sign out without saving?')) return;
+  markClean();
+  appState.role=null; appState.host=null; appState.player=null;
+  appState.currentEventId=null; appState.events=[]; appState.chat=[];
+  appState.playerSheets={}; appState.pendingBets={}; appState._pendingTokens={};
+  localStorage.removeItem('propbet_host'); localStorage.removeItem('propbet_player');
+  clearInterval(_resultsRefreshTimer);
+  stopTimers();
+  document.getElementById('chat-panel').classList.add('hidden');
+  document.getElementById('chat-event-bar').classList.add('hidden');
+  showView('landing');
+}
+
+// ── PLAYER: EVENTS & BETS ──
+async function loadPlayerEvents() {
+  try {
+    // Collect all unique sheets this player is on
+    const sheetIds=[...new Set(Object.values(appState.playerSheets||{}))].filter(Boolean);
+    if (!sheetIds.length) {
+      document.getElementById('player-events-list').innerHTML=`<div class="card" style="text-align:center;padding:40px"><div style="font-size:40px;margin-bottom:12px">🎲</div><h3 style="margin-bottom:8px">No Events Yet</h3><p class="muted">Ask your host to invite you to an event.</p></div>`;
+      return;
+    }
+
+    // Fetch events + refresh player records from all sheets in parallel
+    const fetchResults = await Promise.all(sheetIds.map(async sid => {
+      const [events, players] = await Promise.all([
+        dbGetRows('Events', sid),
+        dbGetRows('Players', sid)
+      ]);
+      return { sid, events, players };
+    }));
+
+    // Rebuild playerSheets map with fresh authorized_events from each sheet
+    const newSheets = { ...appState.playerSheets };
+    let allEvents = [];
+
+    for (const { sid, events, players } of fetchResults) {
+      // Refresh this player's record on this sheet
+      const fresh = players.find(p => p.id === appState.player.id);
+      if (fresh) {
+        const evs = (fresh.authorized_events||'').split(',').filter(Boolean);
+        evs.forEach(evId => { newSheets[evId] = sid; });
+      }
+      allEvents = allEvents.concat(events);
+    }
+
+    appState.playerSheets = newSheets;
+    savePlayerSession(appState.player, newSheets);
+
+    // My events = events whose ID is in playerSheets keys
+    const myEventIds = Object.keys(newSheets);
+    const myEvents = allEvents.filter(e => myEventIds.includes(e.id));
+    appState.events = allEvents;
+
+    // Populate selects
+    ['player-event-select','score-event-select'].forEach(id=>{
+      const sel=document.getElementById(id);
+      sel.innerHTML=myEvents.length ? myEvents.map(e=>`<option value="${e.id}">${esc(e.name)}</option>`).join('') : '<option value="">No events</option>';
+    });
+
+    const el=document.getElementById('player-events-list');
+    if (!myEvents.length) {
+      el.innerHTML=`<div class="card" style="text-align:center;padding:40px"><div style="font-size:40px;margin-bottom:12px">🎲</div><h3 style="margin-bottom:8px">No Events Yet</h3><p class="muted">Ask your host to invite you to an event.</p></div>`;
+      return;
+    }
+    el.innerHTML=myEvents.map(ev=>`
+      <div class="event-card">
+        <div class="event-info">
+          <h3>${esc(ev.name)}</h3><p>${esc(ev.description)}</p>
+          <div class="flex gap-8 mt-8 wrap">
+            <span class="muted" style="font-size:12px">Opens: ${fmtDatetime(ev.opens)}</span>
+            <span class="muted" style="font-size:12px">Deadline: ${fmtDatetime(ev.deadline)}</span>
+          </div>
+        </div>
+        <div class="event-code">${ev.code}</div>
+      </div>`).join('');
+
+    if (myEvents.length) {
+      appState.currentEventId=myEvents[0].id;
+      loadPlayerBets(); loadScoreboard(); setupChatForEvent(myEvents[0]);
+    }
+  } catch(e) { toast('Error loading events: '+e.message,'error'); }
+}
+
+async function loadPlayerBets() {
+  const eventId=document.getElementById('player-event-select').value;
+  if (!eventId) return;
+  appState.currentEventId=eventId;
+  const scoreSelect=document.getElementById('score-event-select');
+  if (scoreSelect) scoreSelect.value=eventId;
+  const ev=appState.events.find(e=>e.id===eventId);
+  if (ev) setupChatForEvent(ev);
+
+  const el=document.getElementById('player-bets-list');
+  const resultPanel=document.getElementById('results-panel');
+  el.innerHTML='<div class="loading-center"><div class="spinner"></div></div>';
+  resultPanel.classList.add('hidden'); resultPanel.innerHTML='';
+  clearInterval(_resultsRefreshTimer);
+  stopCountdown();
+
+  const sheetId=sheetForEvent(eventId);
+  if (!sheetId) { el.innerHTML='<div class="card" style="color:var(--red);padding:20px">Could not find sheet for this event. Try logging out and back in.</div>'; return; }
+
+  try {
+    const [allBets,allEntries,allPlayers]=await Promise.all([
+      dbGetRows('Bets',sheetId),
+      dbGetRows('Entries',sheetId),
+      dbGetRows('Players',sheetId)
+    ]);
+    const bets=allBets.filter(b=>b.event_id===eventId && b.resolved!=='deleted' && b.question);
+    const evEntries=allEntries.filter(e=>e.event_id===eventId);
+    const myEntries=evEntries.filter(e=>e.player_id===appState.player.id);
+
+    // ── Token setup ──
+    const startingTokens = parseInt(ev?.starting_tokens) || 1000;
+    const tokensWagered  = myEntries.reduce((s,e) => s + (parseInt(e.tokens)||0), 0);
+    appState._startingTokens = startingTokens;
+    appState._tokensWagered  = tokensWagered;
+    appState.pendingBets = {};
+    appState._pendingTokens = {};
+    // Pre-fill pending from existing entries so the balance reflects saved bets
+    myEntries.forEach(e => {
+      appState._pendingTokens[e.bet_id] = parseInt(e.tokens)||0;
+    });
+    updateTokenBar(startingTokens);
+
+    // ── Countdown ──
+    if (ev) startCountdown(ev, bets);
+
+    // Show results panel whenever at least one bet is closed or resolved
+    const now2=new Date();
+    const evDeadlinePassed=ev?.deadline&&now2>new Date(ev.deadline);
+    const anyClosedOrResolved=bets.some(b=>
+      b.resolved==='true'||
+      (b.deadline&&now2>new Date(b.deadline))||
+      evDeadlinePassed
+    );
+    if (anyClosedOrResolved) {
+      const evPlayers=allPlayers.filter(p=>(p.authorized_events||'').split(',').includes(eventId));
+      renderResultsPanel(bets,evEntries,evPlayers,ev);
+    }
+
+    const betEntryMap={};
+    evEntries.forEach(e=>{
+      if (!betEntryMap[e.bet_id]) betEntryMap[e.bet_id]={a:0,b:0,tokA:0,tokB:0};
+      if (e.choice==='a') { betEntryMap[e.bet_id].a++; betEntryMap[e.bet_id].tokA+=(parseInt(e.tokens)||0); }
+      else { betEntryMap[e.bet_id].b++; betEntryMap[e.bet_id].tokB+=(parseInt(e.tokens)||0); }
+    });
+
+    if (!bets.length) { el.innerHTML='<div class="card" style="text-align:center;color:var(--muted);padding:30px">No bets posted yet. Check back soon!</div>'; return; }
+
+    el.innerHTML=bets.map(b=>{
+      const myEntry=myEntries.find(e=>e.bet_id===b.id);
+      const open=ev&&isBettingOpen(ev,b);
+      const counts=betEntryMap[b.id]||{a:0,b:0,tokA:0,tokB:0};
+      const totalTok=counts.tokA+counts.tokB;
+      // Parimutuel payout = total token pool / tokens on winning side
+      const pA=totalTok===0?'1.00':counts.tokA===0?'∞':(totalTok/counts.tokA).toFixed(2);
+      const pB=totalTok===0?'1.00':counts.tokB===0?'∞':(totalTok/counts.tokB).toFixed(2);
+      let badge=b.resolved==='true'?`<span class="bet-status-badge badge-resolved">✓ ${esc(b.correct_option)}</span>`:!open?`<span class="bet-status-badge badge-closed">Closed</span>`:`<span class="bet-status-badge badge-open">Open</span>`;
+      const aClass=b.resolved==='true'?(b.correct_option===b.option_a?'correct':(myEntry?.choice==='a'?'wrong':'')):(myEntry?.choice==='a'?'selected':'');
+      const bClass=b.resolved==='true'?(b.correct_option===b.option_b?'correct':(myEntry?.choice==='b'?'wrong':'')):(myEntry?.choice==='b'?'selected':'');
+      const clickable=open&&b.resolved!=='true';
+      const savedTokens = parseInt(myEntry?.tokens)||0;
+      const myChoice = myEntry?.choice||'';
+
+      return `<div class="bet-row" id="betrow-${b.id}">
+        <div class="flex between center"><div class="bet-question">${esc(b.question)}</div>${badge}</div>
+        <div class="bet-choices">
+          <div class="bet-choice-btn ${aClass}" onclick="${clickable?`pickBet('${b.id}','a',this)`:''}" style="${!clickable?'cursor:default':''}">
+            ${esc(b.option_a)}<span class="payout-hint">×${pA} · ${counts.tokA} tok</span>
+          </div>
+          <div class="bet-choice-btn ${bClass}" onclick="${clickable?`pickBet('${b.id}','b',this)`:''}" style="${!clickable?'cursor:default':''}">
+            ${esc(b.option_b)}<span class="payout-hint">×${pB} · ${counts.tokB} tok</span>
+          </div>
+        </div>
+        ${clickable ? `<div class="token-wager-row" id="wager-${b.id}" style="margin-top:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <label style="font-size:12px;color:var(--muted);white-space:nowrap">Tokens to wager:</label>
+          <div style="display:flex;align-items:center;gap:6px;flex:1;min-width:180px">
+            <button class="btn btn-secondary btn-xs" onclick="adjustWager('${b.id}',-100)" style="min-width:36px">−100</button>
+            <button class="btn btn-secondary btn-xs" onclick="adjustWager('${b.id}',-10)" style="min-width:32px">−10</button>
+            <input type="number" id="wager-input-${b.id}" min="0" max="${startingTokens}" value="${savedTokens||0}"
+              style="width:80px;text-align:center;font-family:'DM Mono';font-size:15px;font-weight:700;padding:6px 8px"
+              oninput="onWagerInput('${b.id}',this.value)">
+            <button class="btn btn-secondary btn-xs" onclick="adjustWager('${b.id}',10)" style="min-width:32px">+10</button>
+            <button class="btn btn-secondary btn-xs" onclick="adjustWager('${b.id}',100)" style="min-width:36px">+100</button>
+            <button class="btn btn-primary btn-xs" onclick="allInWager('${b.id}')" title="Wager all remaining tokens">All In</button>
+          </div>
+          ${myChoice?`<span style="font-size:11px;color:var(--muted)">Saved: ${savedTokens} tok on <strong>${myChoice==='a'?esc(b.option_a):esc(b.option_b)}</strong></span>`:''}
+        </div>` : myEntry ? `<div style="margin-top:8px;font-size:12px;color:var(--muted)">Your wager: <strong style="color:var(--accent);font-family:'DM Mono'">${savedTokens}</strong> tokens on <strong>${myEntry.choice==='a'?esc(b.option_a):esc(b.option_b)}</strong></div>` : ''}
+        <div class="bet-meta"><span>Deadline: ${fmtDatetime(b.deadline||ev?.deadline)}</span><span>Pool: ${totalTok} tokens</span></div>
+      </div>`;
+    }).join('');
+
+    document.getElementById('player-save-bar').classList.add('hidden');
+  } catch(e) { el.innerHTML=`<div class="card" style="color:var(--red);padding:20px">Error: ${esc(e.message)}</div>`; }
+}
+
+// ── TOKEN BALANCE HELPERS ──
+function getSpentTokens() {
+  // Sum of all wager inputs currently on screen (pending)
+  return Object.values(appState._pendingTokens||{}).reduce((s,v)=>s+(parseInt(v)||0),0);
+}
+
+function updateTokenBar(startingTokens) {
+  const bar = document.getElementById('token-bar');
+  const remEl = document.getElementById('token-remaining');
+  const lblEl = document.getElementById('token-total-label');
+  if (!bar||!remEl) return;
+  bar.classList.remove('hidden');
+  const spent = getSpentTokens();
+  const remaining = (startingTokens||1000) - spent;
+  remEl.textContent = remaining.toLocaleString();
+  remEl.style.color = remaining <= 0 ? 'var(--red)' : remaining < (startingTokens||1000)*0.2 ? 'var(--accent2)' : 'var(--accent)';
+  if (lblEl) lblEl.textContent = `/ ${(startingTokens||1000).toLocaleString()} starting`;
+}
+
+function pickBet(betId, choice, el) {
+  el.closest('.bet-choices').querySelectorAll('.bet-choice-btn').forEach(b=>b.classList.remove('selected'));
+  el.classList.add('selected');
+  appState.pendingBets[betId]=choice;
+  if (!(betId in (appState._pendingTokens||{}))) {
+    appState._pendingTokens = appState._pendingTokens||{};
+    appState._pendingTokens[betId] = 0;
+  }
+  markDirty();
+  document.getElementById('player-save-bar').classList.remove('hidden');
+}
+
+function adjustWager(betId, delta) {
+  const input = document.getElementById('wager-input-'+betId);
+  if (!input) return;
+  const startingTokens = appState._startingTokens || 1000;
+  const current = parseInt(input.value)||0;
+  const spent = getSpentTokens() - (parseInt(appState._pendingTokens?.[betId])||0);
+  const maxAllowed = startingTokens - spent;
+  const newVal = Math.max(0, Math.min(maxAllowed, current + delta));
+  input.value = newVal;
+  onWagerInput(betId, newVal);
+}
+
+function onWagerInput(betId, rawVal) {
+  const startingTokens = appState._startingTokens || 1000;
+  appState._pendingTokens = appState._pendingTokens||{};
+  const prev = parseInt(appState._pendingTokens[betId])||0;
+  let val = parseInt(rawVal)||0;
+  if (val < 0) val = 0;
+  // Clamp to remaining balance
+  const spentOthers = getSpentTokens() - prev;
+  const maxAllowed = startingTokens - spentOthers;
+  if (val > maxAllowed) { val = maxAllowed; const inp=document.getElementById('wager-input-'+betId); if(inp) inp.value=val; }
+  appState._pendingTokens[betId] = val;
+  markDirty();
+  updateTokenBar(startingTokens);
+  document.getElementById('player-save-bar').classList.remove('hidden');
+}
+
+function allInWager(betId) {
+  const startingTokens = appState._startingTokens || 1000;
+  appState._pendingTokens = appState._pendingTokens||{};
+  const prev = parseInt(appState._pendingTokens[betId])||0;
+  const spentOthers = getSpentTokens() - prev;
+  const remaining = startingTokens - spentOthers;
+  const input = document.getElementById('wager-input-'+betId);
+  if (input) input.value = remaining;
+  onWagerInput(betId, remaining);
+}
+
+// ── COUNTDOWN TIMER ──
+let _countdownTimer = null;
+function stopCountdown() { clearInterval(_countdownTimer); const el=document.getElementById('bet-countdown'); if(el) el.textContent=''; }
+
+function startCountdown(ev, bets) {
+  stopCountdown();
+  const cdEl = document.getElementById('bet-countdown');
+  if (!cdEl) return;
+
+  function tick() {
+    const now = new Date();
+    // Find the soonest open bet deadline (or event deadline)
+    const deadlines = bets
+      .filter(b => b.resolved !== 'true' && b.resolved !== 'deleted')
+      .map(b => b.deadline && b.deadline !== '' ? new Date(b.deadline) : (ev.deadline ? new Date(ev.deadline) : null))
+      .filter(Boolean);
+    if (ev.deadline) deadlines.push(new Date(ev.deadline));
+    const nextDeadline = deadlines.filter(d => d > now).sort((a,b)=>a-b)[0];
+
+    if (!nextDeadline) { cdEl.innerHTML = '<span style="color:var(--red)">⏱ Betting closed</span>'; stopCountdown(); return; }
+
+    const ms = nextDeadline - now;
+    const d = Math.floor(ms/86400000);
+    const h = Math.floor((ms%86400000)/3600000);
+    const m = Math.floor((ms%3600000)/60000);
+    const s = Math.floor((ms%60000)/1000);
+
+    let str = '';
+    const urgent = ms < 300000; // under 5 min
+    const very   = ms < 60000;
+    if (d > 0) str = `${d}d ${h}h ${m}m`;
+    else if (h > 0) str = `${h}h ${m}m ${s}s`;
+    else str = `${m}m ${s}s`;
+
+    const color = very ? 'var(--red)' : urgent ? 'var(--accent2)' : 'var(--muted)';
+    cdEl.innerHTML = `<span style="color:${color}">⏱ ${urgent?'<strong>':''}Betting closes in ${str}${urgent?'</strong>':''}</span>`;
+  }
+  tick();
+  _countdownTimer = setInterval(tick, 1000);
+}
+
+async function saveBets() {
+  const eventId=appState.currentEventId;
+  if (!Object.keys(appState.pendingBets).length && !Object.keys(appState._pendingTokens||{}).length) {
+    toast('No changes to save','info'); return;
+  }
+  // Validate: every pending bet must have a wager > 0
+  for (const [betId] of Object.entries(appState.pendingBets)) {
+    const tok = parseInt(appState._pendingTokens?.[betId])||0;
+    if (tok <= 0) { toast('Set a token wager > 0 for each bet before saving','error'); return; }
+  }
+  const btn=document.querySelector('#player-save-bar .btn-success');
+  if (btn) { btn.disabled=true; btn.textContent='⏳ Saving…'; }
+  const sheetId=sheetForEvent(eventId);
+  if (!sheetId) { toast('Cannot find sheet for this event','error'); if(btn){btn.disabled=false;btn.textContent='💾 Save My Bets';} return; }
+  try {
+    // Build the complete entry list to send to the server for validation + save
+    const entries = [];
+    // Collect all bets the player has touched (new picks or wager changes)
+    const allBetIds = new Set([
+      ...Object.keys(appState.pendingBets),
+      ...Object.keys(appState._pendingTokens||{})
+    ]);
+    for (const betId of allBetIds) {
+      const choice = appState.pendingBets[betId]; // may be undefined if only wager changed
+      const tokens = parseInt(appState._pendingTokens?.[betId])||0;
+      if (tokens > 0 || choice) {
+        entries.push({ betId, choice: choice||null, tokens });
+      }
+    }
+    // Server validates total tokens ≤ starting_tokens and writes atomically
+    const res = await gas({
+      action: 'saveEntries',
+      sheetId,
+      playerId: appState.player.id,
+      eventId,
+      entries
+    });
+    if (res.error) { toast('Error: '+res.error,'error'); if(btn){btn.disabled=false;btn.textContent='💾 Save My Bets';} return; }
+    appState.pendingBets={};
+    appState._pendingTokens={};
+    markClean();
+    document.getElementById('player-save-bar').classList.add('hidden');
+    toast('Bets saved! 🎲','success');
+    loadPlayerBets();
+  } catch(e) {
+    toast('Error saving: '+e.message,'error');
+    if (btn) { btn.disabled=false; btn.textContent='💾 Save My Bets'; }
+  }
+}
+
+// ── RESULTS PANEL v2 ──
+// Shows: numbered bet legend + player grid sorted by payout, auto-refreshes every 30s
+let _resultsRefreshTimer = null;
+
+function renderResultsPanel(bets, evEntries, evPlayers, ev) {
+  const panel = document.getElementById('results-panel');
+  panel.classList.remove('hidden');
+
+  // ── Compute per-bet payout multipliers (token-weighted parimutuel) ──
+  function payoutFor(b, choice) {
+    const be = evEntries.filter(e => e.bet_id === b.id);
+    const totalTok = be.reduce((s,e)=>s+(parseInt(e.tokens)||0),0);
+    const sideTok  = be.filter(e=>e.choice===choice).reduce((s,e)=>s+(parseInt(e.tokens)||0),0);
+    if (totalTok === 0 || sideTok === 0) return null;
+    return totalTok / sideTok;
+  }
+
+  // ── Compute per-player token scores ──
+  const scoreMap = {};
+  evPlayers.forEach(p => { scoreMap[p.id] = { won: 0, lost: 0, pending: 0, wagered: 0 }; });
+
+  bets.forEach(b => {
+    const be = evEntries.filter(e => e.bet_id === b.id);
+    const totalTok = be.reduce((s,e)=>s+(parseInt(e.tokens)||0),0);
+    if (b.resolved === 'true') {
+      const cc = b.correct_option === b.option_a ? 'a' : 'b';
+      const winTok = be.filter(e=>e.choice===cc).reduce((s,e)=>s+(parseInt(e.tokens)||0),0);
+      be.forEach(e => {
+        const tok = parseInt(e.tokens)||0;
+        if (!scoreMap[e.player_id]) scoreMap[e.player_id] = { won:0, lost:0, pending:0, wagered:0 };
+        scoreMap[e.player_id].wagered += tok;
+        if (e.choice === cc) {
+          // Payout = (totalPool / winPool) * myTokens
+          scoreMap[e.player_id].won += winTok > 0 ? (totalTok / winTok) * tok : tok;
+        } else {
+          scoreMap[e.player_id].lost += tok;
+        }
+      });
+    } else {
+      be.forEach(e => {
+        const tok = parseInt(e.tokens)||0;
+        if (!scoreMap[e.player_id]) scoreMap[e.player_id] = { won:0, lost:0, pending:0, wagered:0 };
+        const sideTok = be.filter(x=>x.choice===e.choice).reduce((s,x)=>s+(parseInt(x.tokens)||0),0);
+        scoreMap[e.player_id].wagered += tok;
+        scoreMap[e.player_id].pending += sideTok > 0 ? (totalTok / sideTok) * tok : tok;
+      });
+    }
+  });
+
+  // ── Sort players by net tokens (won - wagered on resolved bets) descending ──
+  const myId = appState.player?.id;
+  const sorted = [...evPlayers].sort((a, b) => {
+    const sa = (scoreMap[a.id]?.won || 0) - (scoreMap[a.id]?.lost || 0);
+    const sb = (scoreMap[b.id]?.won || 0) - (scoreMap[b.id]?.lost || 0);
+    return sb - sa;
+  });
+
+  // Entry lookup: entryMap[playerId][betId] = {choice, tokens}
+  const entryMap = {};
+  evEntries.forEach(e => {
+    if (!entryMap[e.player_id]) entryMap[e.player_id] = {};
+    entryMap[e.player_id][e.bet_id] = { choice: e.choice, tokens: parseInt(e.tokens)||0 };
+  });
+
+  const resolved   = bets.filter(b => b.resolved === 'true').length;
+  const pending    = bets.length - resolved;
+  const now2       = new Date();
+  const evDeadline = ev?.deadline && now2 > new Date(ev.deadline);
+
+  // ── BET LEGEND ──
+  const legendItems = bets.map((b, i) => {
+    const n = i + 1;
+    const pA = payoutFor(b, 'a');
+    const pB = payoutFor(b, 'b');
+    const correctChoice = b.resolved === 'true' ? (b.correct_option === b.option_a ? 'a' : 'b') : null;
+    const closed = b.resolved === 'true' || (b.deadline && now2 > new Date(b.deadline)) || evDeadline;
+
+    const opt1 = `<span class="bet-opt bet-opt-1" title="Counts as 1">1: ${esc(b.option_a)}${pA ? ` (×${pA.toFixed(1)})` : ''}</span>`;
+    const opt0 = `<span class="bet-opt bet-opt-0" title="Counts as 0">0: ${esc(b.option_b)}${pB ? ` (×${pB.toFixed(1)})` : ''}</span>`;
+    const status = b.resolved === 'true'
+      ? `<span style="font-size:11px;color:var(--green)">✓ ${esc(b.correct_option)}</span>`
+      : closed
+        ? `<span style="font-size:11px;color:var(--muted)">🔒 closed</span>`
+        : `<span style="font-size:11px;color:var(--green)">● open</span>`;
+
+    return `<li>
+      <span class="bet-num">${n}</span>
+      <span class="bet-desc" title="${esc(b.question)}">${esc(b.question)}</span>
+      ${opt1}
+      ${opt0}
+      ${status}
+    </li>`;
+  }).join('');
+
+  // ── PLAYER GRID ──
+  const betNums = bets.map((_, i) => i + 1);
+  const rankSymbols = ['🥇','🥈','🥉'];
+  const medals = ['rank-gold','rank-silver','rank-bronze'];
+
+  const gridRows = sorted.map((p, rank) => {
+    const s   = scoreMap[p.id] || { won:0, lost:0, pending:0, wagered:0 };
+    const net = s.won - s.lost;
+    const isMe = p.id === myId;
+    const rankCell = `<td class="pgrid-rank ${medals[rank]||''}">${rankSymbols[rank] || (rank+1)}</td>`;
+
+    const cells = bets.map(b => {
+      const entry = entryMap[p.id]?.[b.id];
+      const closed = b.resolved === 'true' || (b.deadline && now2 > new Date(b.deadline)) || evDeadline;
+
+      if (!entry) return `<td class="pc-none">—</td>`;
+
+      const { choice, tokens } = entry;
+      const val = tokens > 0 ? String(tokens) : (choice === 'a' ? '1' : '0');
+
+      if (b.resolved === 'true') {
+        const cc = b.correct_option === b.option_a ? 'a' : 'b';
+        const right = choice === cc;
+        return `<td class="${right ? 'pc-win' : 'pc-loss'}" title="${right ? '✓ correct' : '✗ wrong'} · ${choice==='a'?esc(b.option_a):esc(b.option_b)}">${val}</td>`;
+      }
+      if (closed) {
+        return `<td class="${choice==='a'?'pc-pend1':'pc-pend0'}" title="${choice==='a'?esc(b.option_a):esc(b.option_b)}">${val}</td>`;
+      }
+      return `<td class="${choice==='a'?'pc-1':'pc-0'}" title="${choice==='a'?esc(b.option_a):esc(b.option_b)}">${val}</td>`;
+    }).join('');
+
+    const payoutCell = `<td class="pgrid-payout">${net >= 0 ? '+' : ''}${Math.round(net)}${s.pending > 0 ? `<span style="color:var(--muted);font-size:10px"> +~${Math.round(s.pending)}</span>` : ''}</td>`;
+
+    return `<tr class="${isMe ? 'me-row' : ''}">
+      ${rankCell}
+      <td class="pgrid-name">${esc(p.handle)}${isMe ? ' <span style="color:var(--accent);font-size:10px">★you</span>' : ''}</td>
+      ${cells}
+      ${payoutCell}
+    </tr>`;
+  }).join('');
+
+  const headerCells = bets.map((_, i) => `<th title="${esc(bets[i].question)}">${i+1}</th>`).join('');
+  const lastRefresh = new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+
+  panel.innerHTML = `
+    <div class="closed-banner">
+      <div class="banner-icon">${resolved === bets.length ? '🏆' : pending > 0 ? '⏳' : '🔒'}</div>
+      <div style="flex:1">
+        <h3>${resolved === bets.length ? 'All Bets Resolved' : resolved > 0 ? 'In Progress' : 'Betting Closed'}</h3>
+        <p>${resolved} of ${bets.length} resolved${pending > 0 ? ` · ${pending} pending` : ''}</p>
+      </div>
+      <div class="refresh-strip">
+        <span id="results-last-refresh">Updated ${lastRefresh}</span>
+        <button class="btn btn-secondary btn-xs" onclick="loadPlayerBets()">↻</button>
+      </div>
+    </div>
+
+    <div class="card mb-16">
+      <h3 style="font-family:'Bebas Neue';font-size:20px;letter-spacing:1px;margin-bottom:4px">Bets
+        <span style="font-size:13px;font-weight:400;color:var(--muted);margin-left:8px">1=Option A wins · 0=Option B wins · (×n) = payout multiplier</span>
+      </h3>
+      <ul class="bet-legend">${legendItems}</ul>
+    </div>
+
+    <div class="card mb-16">
+      <h3 style="font-family:'Bebas Neue';font-size:20px;letter-spacing:1px;margin-bottom:12px">Leaderboard
+        <span style="font-size:12px;font-weight:400;color:var(--muted);margin-left:8px">sorted by payout · <span style="color:var(--green)">bold = correct</span> · <span style="color:var(--red);text-decoration:line-through">0</span> = wrong</span>
+      </h3>
+      <div class="pgrid-wrap">
+        <table class="pgrid">
+          <thead>
+            <tr>
+              <th style="width:28px">#</th>
+              <th class="pgrid-name">Player</th>
+              ${headerCells}
+              <th class="pgrid-payout">Payout</th>
+            </tr>
+          </thead>
+          <tbody>${gridRows}</tbody>
+        </table>
+      </div>
+    </div>`;
+
+  // ── Auto-refresh every 30 seconds ──
+  clearInterval(_resultsRefreshTimer);
+  _resultsRefreshTimer = setInterval(() => {
+    // Only refresh if panel is visible
+    if (!panel.classList.contains('hidden') && document.getElementById('player-tab-bets') &&
+        !document.getElementById('player-tab-bets').classList.contains('hidden')) {
+      loadPlayerBets();
+    }
+  }, 30000);
+}
+
+// Pure canvas bar chart — no external library needed
+function drawScoreChart(canvas, labels, data, players, scoreMap, myId) {
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.offsetWidth || 600;
+  const H = 200;
+  canvas.width  = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width  = W + 'px';
+  canvas.style.height = H + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  const PAD_L=40, PAD_R=16, PAD_T=16, PAD_B=40;
+  const chartW = W - PAD_L - PAD_R;
+  const chartH = H - PAD_T - PAD_B;
+
+  if (!data.length) return;
+  const maxVal = Math.max(...data.map(Math.abs), 1);
+  const minVal = Math.min(...data, 0);
+  const range  = Math.max(...data, 0) - Math.min(...data, 0) || 1;
+  const zeroY  = PAD_T + (Math.max(...data,0) / (Math.max(...data,0) - Math.min(...data,0) || 1)) * chartH;
+
+  // Background
+  ctx.fillStyle = 'transparent';
+  ctx.fillRect(0,0,W,H);
+
+  // Grid lines
+  const steps = 5;
+  ctx.strokeStyle = 'rgba(42,42,61,0.7)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4,4]);
+  for (let i=0;i<=steps;i++) {
+    const y = PAD_T + (i/steps)*chartH;
+    ctx.beginPath(); ctx.moveTo(PAD_L,y); ctx.lineTo(W-PAD_R,y); ctx.stroke();
+    const val = maxVal - (i/steps)*(maxVal-minVal);
+    ctx.fillStyle='#7070a0'; ctx.font='10px DM Mono,monospace'; ctx.textAlign='right';
+    ctx.fillText((val>=0?'+':'')+val.toFixed(1), PAD_L-4, y+3);
+  }
+  ctx.setLineDash([]);
+
+  // Zero line
+  const safeZeroY = Math.min(Math.max(PAD_T + (maxVal / (maxVal - minVal || 1)) * chartH, PAD_T), PAD_T+chartH);
+  ctx.strokeStyle='rgba(240,192,64,0.3)'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(PAD_L, safeZeroY); ctx.lineTo(W-PAD_R, safeZeroY); ctx.stroke();
+
+  // Bars
+  const n = data.length;
+  const barW = Math.min(Math.floor(chartW/n*0.7), 60);
+  const gap   = chartW / n;
+
+  data.forEach((val, i) => {
+    const isMe = players[i]?.id === myId;
+    const color = val >= 0
+      ? (isMe ? 'rgba(46,204,113,0.9)' : 'rgba(46,204,113,0.45)')
+      : (isMe ? 'rgba(231,76,60,0.9)'  : 'rgba(231,76,60,0.45)');
+
+    const x = PAD_L + gap*i + gap/2 - barW/2;
+    const barH = Math.abs(val) / (maxVal - minVal || maxVal || 1) * chartH;
+    const y = val >= 0 ? safeZeroY - barH : safeZeroY;
+
+    // Bar
+    ctx.fillStyle = color;
+    const r = 4;
+    ctx.beginPath();
+    if (val >= 0) {
+      ctx.moveTo(x+r, y); ctx.lineTo(x+barW-r,y);
+      ctx.arcTo(x+barW,y,x+barW,y+r,r);
+      ctx.lineTo(x+barW, y+barH); ctx.lineTo(x, y+barH);
+      ctx.arcTo(x,y,x+r,y,r);
+    } else {
+      ctx.moveTo(x, y); ctx.lineTo(x+barW, y);
+      ctx.lineTo(x+barW, y+barH-r);
+      ctx.arcTo(x+barW,y+barH,x+barW-r,y+barH,r);
+      ctx.lineTo(x+r, y+barH);
+      ctx.arcTo(x,y+barH,x,y+barH-r,r);
+      ctx.lineTo(x, y);
+    }
+    ctx.closePath(); ctx.fill();
+
+    // Value label on bar
+    ctx.fillStyle = '#e8e8f0'; ctx.font = `bold 11px DM Sans,sans-serif`; ctx.textAlign='center';
+    const label = (val>=0?'+':'')+val.toFixed(1);
+    if (val >= 0) ctx.fillText(label, x+barW/2, Math.max(y-4, PAD_T+10));
+    else ctx.fillText(label, x+barW/2, Math.min(y+barH+12, H-PAD_B+12));
+
+    // Name label
+    ctx.fillStyle = isMe ? '#f0c040' : '#7070a0';
+    ctx.font = isMe ? 'bold 11px DM Sans,sans-serif' : '10px DM Sans,sans-serif';
+    const nameLabel = (labels[i]||'').length > 8 ? labels[i].slice(0,7)+'…' : labels[i];
+    ctx.fillText((isMe?'★ ':'')+nameLabel, x+barW/2, H-PAD_B+14);
+  });
+}
+
+// ── SCOREBOARD ──
+async function loadScoreboard() {
+  const eventId=document.getElementById('score-event-select').value;
+  if (!eventId) return;
+  const el=document.getElementById('scoreboard-content');
+  el.innerHTML='<div class="loading-center"><div class="spinner"></div></div>';
+  const sheetId=sheetForEvent(eventId);
+  const ev=appState.events.find(e=>e.id===eventId);
+  const startingTokens = parseInt(ev?.starting_tokens)||1000;
+  try {
+    const [bets,entries,players]=await Promise.all([dbGetRows('Bets',sheetId),dbGetRows('Entries',sheetId),dbGetRows('Players',sheetId)]);
+    const evBets=bets.filter(b=>b.event_id===eventId && b.resolved!=='deleted' && b.question);
+    const evEntries=entries.filter(e=>e.event_id===eventId);
+    const evPlayers=players.filter(p=>(p.authorized_events||'').split(',').includes(eventId));
+    const resolved=evBets.filter(b=>b.resolved==='true');
+    const pending=evBets.filter(b=>b.resolved!=='true' && b.resolved!=='deleted');
+
+    // Token-weighted parimutuel scoring
+    const pw={};
+    evPlayers.forEach(p=>{pw[p.id]={handle:p.handle,won:0,lost:0,pending:0,wagered:0};});
+
+    for (const bet of resolved) {
+      const be=evEntries.filter(e=>e.bet_id===bet.id);
+      const totalTok=be.reduce((s,e)=>s+(parseInt(e.tokens)||0),0);
+      const cc=bet.correct_option===bet.option_a?'a':'b';
+      const winTok=be.filter(e=>e.choice===cc).reduce((s,e)=>s+(parseInt(e.tokens)||0),0);
+      be.forEach(e=>{
+        const tok=parseInt(e.tokens)||0;
+        if(!pw[e.player_id])pw[e.player_id]={handle:'?',won:0,lost:0,pending:0,wagered:0};
+        pw[e.player_id].wagered+=tok;
+        if(e.choice===cc) pw[e.player_id].won+=winTok>0?(totalTok/winTok)*tok:tok;
+        else pw[e.player_id].lost+=tok;
+      });
+    }
+    for (const bet of pending) {
+      const be=evEntries.filter(e=>e.bet_id===bet.id);
+      const totalTok=be.reduce((s,e)=>s+(parseInt(e.tokens)||0),0);
+      be.forEach(e=>{
+        const tok=parseInt(e.tokens)||0;
+        if(!pw[e.player_id])pw[e.player_id]={handle:'?',won:0,lost:0,pending:0,wagered:0};
+        pw[e.player_id].wagered+=tok;
+        const sideTok=be.filter(x=>x.choice===e.choice).reduce((s,x)=>s+(parseInt(x.tokens)||0),0);
+        pw[e.player_id].pending+=sideTok>0?(totalTok/sideTok)*tok:tok;
+      });
+    }
+
+    // Net = starting_tokens − wagered_on_resolved + won_on_resolved
+    const sorted=Object.entries(pw).map(([pid,d])=>{
+      const net=startingTokens - d.wagered + d.won;
+      return({pid,...d,net});
+    }).sort((a,b)=>b.net-a.net);
+
+    const rc=['rank-1','rank-2','rank-3'];
+    el.innerHTML=`<div class="card mb-16">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:12px">Starting tokens: <strong style="color:var(--accent);font-family:'DM Mono'">${startingTokens.toLocaleString()}</strong> per player · Token-weighted parimutuel payouts</div>
+      <div style="overflow-x:auto"><table class="scoreboard-table" style="min-width:420px">
+      <thead><tr><th>#</th><th>Player</th><th>Balance</th><th>Wagered</th><th>Won</th><th>Lost</th><th>Pending</th></tr></thead>
+      <tbody>${sorted.map((p,i)=>{
+        const isMe=p.pid===appState.player?.id;
+        const balColor=p.net>=startingTokens?'var(--green)':p.net<startingTokens*0.5?'var(--red)':'var(--text)';
+        return`<tr ${isMe?'style="background:rgba(240,192,64,.06)"':''}>
+          <td><span class="rank-num ${rc[i]||''}">${i+1}</span></td>
+          <td><strong>${esc(p.handle)}</strong>${isMe?' <span class="pill pill-yellow">You</span>':''}</td>
+          <td><strong style="font-family:'DM Mono';color:${balColor}">${Math.round(p.net).toLocaleString()}</strong></td>
+          <td style="color:var(--muted);font-family:'DM Mono'">${Math.round(p.wagered).toLocaleString()}</td>
+          <td class="green" style="font-family:'DM Mono'">+${Math.round(p.won).toLocaleString()}</td>
+          <td class="red" style="font-family:'DM Mono'">−${Math.round(p.lost).toLocaleString()}</td>
+          <td class="muted" style="font-family:'DM Mono'">~${Math.round(p.pending).toLocaleString()}</td>
+        </tr>`;}).join('')}</tbody>
+    </table></div></div>
+    <div class="card"><h3 style="font-family:'Bebas Neue';font-size:20px;letter-spacing:1px;margin-bottom:12px">Results (${resolved.length}/${evBets.length} resolved)</h3>
+      ${resolved.map(b=>{
+        const be=evEntries.filter(e=>e.bet_id===b.id);
+        const totalTok=be.reduce((s,e)=>s+(parseInt(e.tokens)||0),0);
+        const cc=b.correct_option===b.option_a?'a':'b';
+        const winTok=be.filter(e=>e.choice===cc).reduce((s,e)=>s+(parseInt(e.tokens)||0),0);
+        const mult=winTok>0?(totalTok/winTok).toFixed(2):'—';
+        return`<div class="config-block"><strong>${esc(b.question)}</strong>
+          <span class="bet-status-badge badge-resolved" style="margin-left:8px">${esc(b.correct_option)}</span>
+          <div class="muted mt-8" style="font-size:12px">Pool: ${totalTok} tokens · ${winTok} on winner · ×${mult} payout</div></div>`;
+      }).join('')}
+      ${pending.length?`<p class="muted mt-8" style="font-size:13px">${pending.length} bet${pending.length!==1?'s':''} still pending…</p>`:''}
+    </div>`;
+    document.getElementById('score-last-update').textContent='Updated '+new Date().toLocaleTimeString();
+  } catch(e) { el.innerHTML=`<div class="card" style="color:var(--red);padding:20px">Error: ${esc(e.message)}</div>`; }
+}
+
+// ── PLAYER: JOIN ANOTHER EVENT ──
+function showJoinAnotherEvent() {
+  const row=document.getElementById('join-another-row');
+  row.classList.toggle('hidden');
+  if (!row.classList.contains('hidden')) document.getElementById('join-another-code').focus();
+}
+
+async function joinAnotherEvent() {
+  const code=document.getElementById('join-another-code').value.trim().toUpperCase();
+  if (!code) { toast('Enter a code','error'); return; }
+  try {
+    const res=await gas({action:'findEventByCode',code});
+    if (res.error||!res.event) { toast('Code not found','error'); return; }
+    const eventId=res.event.id;
+    const sheetId=res.sheetId;
+
+    // Already in this event?
+    if (appState.playerSheets?.[eventId]) { toast('Already in this event!','info'); return; }
+
+    // Check if player already has a record on this sheet (different event, same host)
+    const existingPlayers=await dbGetRows('Players',sheetId);
+    const myRecord=existingPlayers.find(p=>p.id===appState.player.id);
+
+    if (myRecord) {
+      // Already registered on this sheet — just add the event to authorized_events
+      const idx=existingPlayers.findIndex(p=>p.id===appState.player.id);
+      const evs=(myRecord.authorized_events||'').split(',').filter(Boolean);
+      if (!evs.includes(eventId)) evs.push(eventId);
+      await dbUpdate('Players',idx+2,[myRecord.id,myRecord.handle,myRecord.pin_hash,evs.join(','),myRecord.created],sheetId);
+    } else {
+      // New host's sheet — check handle isn't taken there
+      if (existingPlayers.find(p=>p.handle.toLowerCase()===appState.player.handle.toLowerCase())) {
+        toast(`Handle "${appState.player.handle}" is already taken on that host's event. Log in from the main screen to use your existing account there, or contact the host.`,'error');
+        return;
+      }
+      // Register on new sheet using same handle+pin
+      await dbAppend('Players',[appState.player.id,appState.player.handle,appState.player.pin_hash,eventId,now()],sheetId);
+    }
+
+    // Update local playerSheets map
+    const newSheets={...appState.playerSheets, [eventId]:sheetId};
+    appState.playerSheets=newSheets;
+    savePlayerSession(appState.player, newSheets);
+
+    document.getElementById('join-another-row').classList.add('hidden');
+    document.getElementById('join-another-code').value='';
+    toast(`Joined "${res.event.name}"! 🎲`,'success');
+    loadPlayerEvents();
+  } catch(e) { toast('Error: '+e.message,'error'); }
+}
+
+// ── PLAYER TABS ──
+function playerTab(name,btn) {
+  if (name !== 'bets' && isDirty()) {
+    if (!confirmNavigateAway('You have unsaved bets. Switch tabs without saving?')) return;
+    markClean();
+  }
+  ['bets','scoreboard','events'].forEach(t=>document.getElementById('player-tab-'+t).classList.add('hidden'));
+  document.getElementById('player-tab-'+name).classList.remove('hidden');
+  document.querySelectorAll('#view-player .tab-btn').forEach(b=>b.classList.remove('active'));
+  if (btn&&btn.classList) btn.classList.add('active');
+  else document.querySelectorAll('#view-player .tab-btn').forEach(b=>{if(b.getAttribute('onclick')&&b.getAttribute('onclick').includes(`'${name}'`))b.classList.add('active')});
+  if (name==='scoreboard') loadScoreboard();
+  if (name==='bets') startBetsRefresh();
+  else stopBetsRefresh();
+}
+
+// ── CHAT ──
+function setupChatForEvent(ev) {
+  if (ev.chat_enabled==='true') {
+    document.getElementById('chat-panel').classList.remove('hidden');
+    if (appState.role==='host') {
+      const bar=document.getElementById('chat-event-bar');
+      bar.classList.remove('hidden');
+      const sel=document.getElementById('chat-event-select');
+      sel.innerHTML=appState.events.filter(e=>e.chat_enabled==='true').map(e=>`<option value="${e.id}" ${e.id===ev.id?'selected':''}>${esc(e.name)}</option>`).join('');
+    }
+    appState.currentEventId=ev.id;
+    loadChat();
+  } else {
+    if (appState.role!=='host') document.getElementById('chat-panel').classList.add('hidden');
+  }
+}
+
+function switchChatEvent() {
+  const eventId=document.getElementById('chat-event-select').value;
+  const ev=appState.events.find(e=>e.id===eventId);
+  if (ev) { appState.currentEventId=eventId; appState.chat=[]; loadChat(); }
+}
+
+async function loadChat() {
+  const eventId=appState.currentEventId;
+  if (!eventId) return;
+  const sheetId=appState.role==='host' ? appState.host.sheetId : sheetForEvent(eventId);
+  if (!sheetId) return;
+  try {
+    const msgs=(await dbGetRows('Chat',sheetId)).filter(m=>m.event_id===eventId).slice(-80);
+    const el=document.getElementById('chat-messages');
+    const wasAtBottom=el.scrollHeight-el.scrollTop-el.clientHeight<40;
+    const prev=appState.chat.length;
+    appState.chat=msgs;
+    el.innerHTML=msgs.length
+      ? msgs.map(m=>{const ts=m.timestamp?new Date(m.timestamp).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'';return`<div class="chat-msg"><span class="chat-sender ${m.handle==='Host'?'host':''}">${esc(m.handle)}</span>${esc(m.message)}<span style="float:right;font-size:10px;color:var(--muted)">${ts}</span></div>`;}).join('')
+      : '<div class="chat-msg system">No messages yet. Say hi!</div>';
+    if (wasAtBottom) el.scrollTop=el.scrollHeight;
+    if (!appState.chatOpen&&msgs.length>prev) {
+      appState.chatUnread+=msgs.length-prev;
+      const badge=document.getElementById('chat-badge');
+      badge.textContent=appState.chatUnread; badge.classList.remove('hidden');
+    }
+  } catch(e) { console.warn('Chat load error:',e.message); }
+}
+
+async function sendChat() {
+  const input=document.getElementById('chat-input');
+  const msg=input.value.trim();
+  if (!msg||!appState.currentEventId) return;
+  input.value='';
+  const handle=appState.role==='host'?'Host':(appState.player?.handle||'?');
+  const playerId=appState.role==='host'?'host':(appState.player?.id||'host');
+  const sheetId=appState.role==='host'?appState.host.sheetId:sheetForEvent(appState.currentEventId);
+  try { await dbAppend('Chat',[uid(),appState.currentEventId,playerId,handle,msg,now()],sheetId); loadChat(); }
+  catch(e) { toast('Chat error: '+e.message,'error'); }
+}
+
+function toggleChat() {
+  const panel=document.getElementById('chat-panel');
+  appState.chatOpen=!appState.chatOpen;
+  panel.classList.toggle('expanded',appState.chatOpen);
+  panel.classList.toggle('collapsed',!appState.chatOpen);
+  document.getElementById('chat-chevron').textContent=appState.chatOpen?'▼':'▲';
+  if (appState.chatOpen) {
+    appState.chatUnread=0;
+    document.getElementById('chat-badge').classList.add('hidden');
+    setTimeout(()=>{const el=document.getElementById('chat-messages');el.scrollTop=el.scrollHeight;},100);
+  }
+}
+
+// ── TIMERS ──
+function startChatRefresh()  { clearInterval(appState.chatRefreshTimer);  appState.chatRefreshTimer  = setInterval(loadChat, 15000); }
+function startScoreRefresh() { clearInterval(appState.scoreRefreshTimer); appState.scoreRefreshTimer = setInterval(()=>{ if(!document.getElementById('player-tab-scoreboard').classList.contains('hidden')) loadScoreboard(); }, 60000); }
+function startBetsRefresh()  {
+  stopBetsRefresh();
+  appState.betsRefreshTimer = setInterval(() => {
+    // Only silently refresh if player has NO unsaved changes (don't clobber their inputs)
+    if (!isDirty()) loadPlayerBets();
+  }, 30000);
+}
+function stopBetsRefresh()   { clearInterval(appState.betsRefreshTimer); }
+function stopTimers()        { clearInterval(appState.chatRefreshTimer); clearInterval(appState.scoreRefreshTimer); stopBetsRefresh(); stopCountdown(); }
+
+// ── STARTUP ──
+async function startup() {
+  if (!SETTINGS.scriptUrl) {
+    document.getElementById('landing-not-configured').classList.remove('hidden');
+  }
+
+  const params=new URLSearchParams(window.location.search);
+  const urlCode=params.get('code');
+
+  const savedHost=localStorage.getItem('propbet_host');
+  const savedPlayer=localStorage.getItem('propbet_player');
+
+  if (savedHost && SETTINGS.scriptUrl) {
+    appState.host=JSON.parse(savedHost);
+    appState.role='host';
+    showView('host');
+    return;
+  }
+  if (savedPlayer && SETTINGS.scriptUrl) {
+    const cached=JSON.parse(savedPlayer);
+    // Support both old format {player, playerSheets} and legacy {id, handle, hostSheetId, ...}
+    if (cached.player && cached.playerSheets) {
+      appState.player=cached.player;
+      appState.playerSheets=cached.playerSheets;
+    } else {
+      // Legacy format — migrate
+      appState.player=cached;
+      const sid=cached.hostSheetId||null;
+      const evs=(cached.authorized_events||'').split(',').filter(Boolean);
+      appState.playerSheets={};
+      if (sid) evs.forEach(evId=>{ appState.playerSheets[evId]=sid; });
+    }
+    appState.role='player';
+    showView('player');
+    return;
+  }
+
+  if (urlCode) {
+    document.getElementById('join-code').value=urlCode.toUpperCase();
+    showView('player-join');
+    if (SETTINGS.scriptUrl) validateInviteCode();
+    return;
+  }
+
+  showView('landing');
+}
+
+startup();
+</script>
+
+
+<!-- BACKEND: See propbet-server.gs — deploy as a Google Apps Script Web App
+     and paste the URL into SETTINGS.scriptUrl above. -->
+</body>
+</html>
