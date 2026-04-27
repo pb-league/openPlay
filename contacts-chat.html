@@ -481,6 +481,10 @@ function initPeer(code) {
     setupDataConn(conn);
     setStatus(`${conn.peer} connected!`, 'ok');
     showToast(`📡 ${conn.peer} joined`);
+    // Auto-open the call panel on the receiving side
+    if (!document.getElementById('call-modal').classList.contains('open')) {
+      openCallPanel();
+    }
   });
 
   peer.on('call', call => {
@@ -491,7 +495,9 @@ function initPeer(code) {
         document.getElementById('remote-video').srcObject = remoteStream;
       });
     });
-    openCallPanel();
+    if (!document.getElementById('call-modal').classList.contains('open')) {
+      openCallPanel();
+    }
     setStatus(`Call from ${call.peer}`, 'ok');
   });
 
@@ -538,21 +544,25 @@ function connectToPeer() {
   if (!peer || !peer.open) { showToast('Not ready yet, try again'); return; }
 
   setStatus(`Connecting to ${code}…`);
-  const conn = peer.connect(code);
+  const conn = peer.connect(code, { reliable: true });
   conn.on('open', () => {
     setupDataConn(conn);
     setStatus(`Connected to ${code}`, 'ok');
     showToast(`✅ Connected to ${code}`);
-    // Start video call
+    // Start video call only after data connection is fully open
     getMedia().then(stream => {
       const call = peer.call(code, stream);
       currentCall = call;
       call.on('stream', remoteStream => {
         document.getElementById('remote-video').srcObject = remoteStream;
       });
-    });
+      call.on('error', e => setStatus('Call error: ' + e, 'err'));
+    }).catch(e => setStatus('Camera/mic error: ' + e.message, 'err'));
   });
-  conn.on('error', e => setStatus('Connect failed: ' + e, 'err'));
+  conn.on('error', e => {
+    setStatus('Connect failed: ' + e, 'err');
+    showToast('❌ Could not reach that code — is the other person ready?');
+  });
 }
 
 // ── Chat ───────────────────────────────────────────────────────
