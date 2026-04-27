@@ -470,7 +470,25 @@ function initPeer(code) {
   myCode = code || genCode();
   document.getElementById('my-code-val').textContent = myCode;
 
-  peer = new Peer(myCode, { debug: 1 });
+  // ICE config: STUN + public TURN for cross-network relay (phone <-> laptop etc.)
+  const iceServers = [
+    { urls: 'stun:stun.l.google.com:19302' },
+    { urls: 'stun:stun1.l.google.com:19302' },
+    {
+      urls: [
+        'turn:openrelay.metered.ca:80',
+        'turn:openrelay.metered.ca:443',
+        'turn:openrelay.metered.ca:443?transport=tcp'
+      ],
+      username: 'openrelayproject',
+      credential: 'openrelayproject'
+    }
+  ];
+
+  peer = new Peer(myCode, {
+    debug: 1,
+    config: { iceServers, iceTransportPolicy: 'all' }
+  });
 
   peer.on('open', id => {
     setStatus(`Ready · Your code: ${id}`, 'ok');
@@ -502,11 +520,16 @@ function initPeer(code) {
   });
 
   peer.on('error', e => {
-    setStatus('Error: ' + e.type, 'err');
-    // regenerate on ID-taken
-    if (e.type === 'unavailable-id') {
-      peer.destroy(); initPeer();
-    }
+    const msgs = {
+      'unavailable-id': 'Code taken — generating new one…',
+      'peer-unavailable': 'That code is not online. Check it and try again.',
+      'network': 'Network error — check your connection.',
+      'server-error': 'Signaling server error. Try again in a moment.',
+      'browser-incompatible': 'Your browser does not support WebRTC. Try Chrome or Safari.'
+    };
+    setStatus(msgs[e.type] || ('Error: ' + e.type), 'err');
+    showToast('❌ ' + (msgs[e.type] || e.type));
+    if (e.type === 'unavailable-id') { peer.destroy(); initPeer(); }
   });
 }
 
@@ -523,9 +546,59 @@ function checkAutoConnect() {
 // ── Media ──────────────────────────────────────────────────────
 async function getMedia() {
   if (localStream) return localStream;
-  localStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width:320, height:240 }, audio: true });
+
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    setStatus('Camera/mic not supported. Use HTTPS in Chrome/Safari.', 'err');
+    showToast('⚠️ Camera requires HTTPS — see instructions below');
+    showHttpsWarning();
+    throw new Error('getUserMedia not supported');
+  }
+
+  try {
+    localStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'user', width: { ideal: 320 }, height: { ideal: 240 } },
+      audio: true
+    });
+  } catch (videoErr) {
+    // Video denied or unavailable — try audio only
+    console.warn('Video failed, trying audio only:', videoErr);
+    try {
+      localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      showToast('📵 Camera unavailable — audio only');
+      setStatus('Audio only (camera unavailable)', 'err');
+    } catch (audioErr) {
+      let msg = 'Camera/mic access denied.';
+      if (audioErr.name === 'NotAllowedError') {
+        msg = 'Permission denied. On iPad/iPhone: Settings → Safari → Camera & Microphone → Allow. Reload after.';
+      } else if (audioErr.name === 'NotFoundError') {
+        msg = 'No camera/mic found on this device.';
+      }
+      setStatus(msg, 'err');
+      showToast('❌ ' + msg.split('.')[0]);
+      showHttpsWarning();
+      throw audioErr;
+    }
+  }
+
   document.getElementById('local-video').srcObject = localStream;
   return localStream;
+}
+
+function showHttpsWarning() {
+  if (location.protocol === 'https:') return; // already HTTPS, not the issue
+  const existing = document.getElementById('https-warn');
+  if (existing) return;
+  const div = document.createElement('div');
+  div.id = 'https-warn';
+  div.style.cssText = 'background:#3a1a1a;border:1px solid #e05555;border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:0.82rem;color:#f0ece4;line-height:1.5;';
+  div.innerHTML = `<strong style="color:#e8c547">⚠️ HTTPS Required for Camera/Mic</strong><br>
+    This page is served over <code>http://</code> or opened as a local file.<br>
+    Browsers block camera/mic access unless the page is on <strong>https://</strong>.<br>
+    <strong>Fix:</strong> Host this file on any free HTTPS host:
+    <a href="https://pages.github.com" target="_blank" style="color:#5599e8">GitHub Pages</a>,
+    <a href="https://netlify.com" target="_blank" style="color:#5599e8">Netlify</a>, or
+    <a href="https://vercel.com" target="_blank" style="color:#5599e8">Vercel</a> — all free, one-minute setup.`;
+  document.getElementById('call-panel').insertBefore(div, document.getElementById('call-panel').firstChild.nextSibling.nextSibling);
 }
 
 // ── Data Connection ────────────────────────────────────────────
